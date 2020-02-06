@@ -34,6 +34,7 @@ In the other terminal:
 ```
 
 In each of the three internet browser tabs/windows, open each of the GUIs:
+
 http://localhost:5006/controls
 
 http://localhost:5006/striptool
