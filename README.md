@@ -9,10 +9,10 @@ Dependencies for running the notebook include tensorflow version 1.15, and keras
 
 To get these modules:
 ```
-conda create -n smdemo -c conda-forge python=3.7 tensorflow keras pyepics pcaspy bokeh matplotlib scikit-learn h5py
+$ conda create -n smdemo -c conda-forge python=3.7 tensorflow keras pyepics pcaspy bokeh matplotlib scikit-learn h5py
 ```
 ```
-conda activate smdemo
+$ conda activate smdemo
 ```
 pcaspy requires an EPICS install and has instructions on its website:
 https://pcaspy.readthedocs.io/en/latest/
@@ -25,12 +25,12 @@ Open two terminal windows and three internet browser tabs/windows.
 In the first terminal, type:
 
 ```
-./serve.sh
+$ ./serve.sh
 ```
 In the other terminal:
 
 ```
-./view.bash
+$ ./view.bash
 ```
 
 In each of the three internet browser tabs/windows, open each of the GUIs:
