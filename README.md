@@ -11,9 +11,7 @@ To get these modules:
 ```
 conda create -n smdemo -c conda-forge python=3.7 tensorflow keras pyepics pcaspy bokeh matplotlib scikit-learn h5py
 
-
 conda activate smdemo
-
 ```
 pcaspy requires an EPICS install and has instructions on its website:
 https://pcaspy.readthedocs.io/en/latest/
@@ -27,7 +25,6 @@ In the first terminal, type:
 
 ```
 ./serve.sh
-
 ```
 In the other terminal:
 
