@@ -163,46 +163,6 @@ class SyncedSimPVServer:
         self.serve_data = False
 
 
-class OnlineSurrogateModel:
-    def __init__(self):
-
-        self.scalar_model = SurrogateModel(model_file="Scalar_NN_SurrogateModel.h5")
-        self.image_model = SurrogateModel(model_file="YAG_NN_SurrogateModel.h5")
-
-    def run(self, pv_state, verbose=True):
-
-        t1 = time.time()
-        print("Running model...", end="")
-        scalar_data = self.scalar_model.evaluate(pv_state)
-        image_array, ext = self.image_model.evaluate_image(pv_state)
-
-        output = {}
-        for scalar in scalar_data:
-            output[scalar] = scalar_data[scalar][0]
-
-        image_array, ext = self.image_model.evaluate_image_array(pv_state)
-        print(ext)
-        ext = [
-            ext[0, 0],
-            ext[0, 1],
-            ext[0, 2],
-            ext[0, 3],
-        ]  # From Lipi: # At the moment there is some scaling done by hand, this can be changed!
-
-        image_values = np.zeros((2 + len(ext) + image_array.shape[1],))
-        image_values[0] = self.image_model.bins[0]
-        image_values[1] = self.image_model.bins[1]
-        image_values[2:6] = ext
-        image_values[6:] = image_array
-
-        # output['z:pz']=image_values
-        output["x:y"] = image_values
-        t2 = time.time()
-        print("Ellapsed time: " + str(t2 - t1))
-
-        return output
-
-
 def fix_units(unit_str):
 
     unit_str = unit_str.strip()
@@ -215,6 +175,7 @@ def fix_units(unit_str):
 
 
 if __name__ == "__main__":
+    from online_model.model.surrogate_model import OnlineSurrogateModel
 
     vmname = "smvm"
 
