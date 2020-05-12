@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import sys, os
+import time
 import keras
 import tensorflow
 from keras.models import Sequential, Model, model_from_json
@@ -12,7 +12,7 @@ import pickle
 import sklearn
 
 
-scalerfile = "transformer_frontend_y_imgs.sav"
+scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
 
 
@@ -161,8 +161,12 @@ Example Usage:
 class OnlineSurrogateModel:
     def __init__(self):
 
-        self.scalar_model = SurrogateModel(model_file="Scalar_NN_SurrogateModel.h5")
-        self.image_model = SurrogateModel(model_file="YAG_NN_SurrogateModel.h5")
+        self.scalar_model = SurrogateModel(
+            model_file="online_model/files/Scalar_NN_SurrogateModel.h5"
+        )
+        self.image_model = SurrogateModel(
+            model_file="online_model/files/YAG_NN_SurrogateModel.h5"
+        )
 
     def run(self, pv_state, verbose=True):
 
