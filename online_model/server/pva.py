@@ -59,7 +59,11 @@ class PVAServer:
         # create PVs for model inputs
         for in_pv in in_pvdb:
             pvname = f"{PREFIX}:{in_pv}"
-            pv = SharedPV(handler=InputHandler(), nt=NTScalar("d"), initial=in_pvdb[in_pv]["value"])
+            pv = SharedPV(
+                handler=InputHandler(),
+                nt=NTScalar("d"),
+                initial=in_pvdb[in_pv]["value"],
+            )
             providers[pvname] = pv
 
         # create PVs for model outputs
