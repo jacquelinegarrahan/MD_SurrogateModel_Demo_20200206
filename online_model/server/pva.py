@@ -54,7 +54,7 @@ class PVAServer:
             input_pvs[in_pv] = in_pvdb[in_pv]["value"]
 
         # use main thread loaded model to do initial model run
-        model_loader.model.run(input_pvs, verbose=True)
+        starting_output = model_loader.model.run(input_pvs, verbose=True)
 
         # create PVs for model inputs
         for in_pv in in_pvdb:
@@ -72,10 +72,12 @@ class PVAServer:
 
             # use default handler for the output process variables
             # updates are handled from post calls within the input update processing
-            if isinstance(out_pvdb[out_pv]["value"], (float,)):
-                pv = SharedPV(nt=NTScalar("d"), initial=out_pvdb[out_pv]["value"])
+            if isinstance(starting_output[out_pv], (float,)):
+                pv = SharedPV(nt=NTScalar("d"), initial=starting_output[out_pv])
             else:
-                pv = SharedPV(nt=NTNDArray(), initial=out_pvdb[out_pv]["value"])
+                pv = SharedPV(nt=NTNDArray(), initial=starting_output[out_pv])
+
+            # update global provider list
             providers[pvname] = pv
 
     def start_server(self):
