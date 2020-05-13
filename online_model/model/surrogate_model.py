@@ -37,17 +37,15 @@ Example Usage:
         return s
 
     def configure(self):
-
         ## Open the File
-        with h5py.File(self.model_file, "r") as h5:
-            attrs = dict(h5.attrs)
-        self.__dict__.update(attrs)
+        model_info = load_model_info(self.model_file)
+        self.__dict__.update(model_info)
         self.json_string = self.JSON
         self.model = model_from_json(self.json_string.decode("utf-8"))
         self.model.load_weights(self.model_file)
         ## Set basic values needed for input and output scaling
-        self.model_value_max = attrs["upper"]
-        self.model_value_min = attrs["lower"]
+        self.model_value_max = model_info["upper"]
+        self.model_value_min = model_info["lower"]
         # print(self.output_scales)
         # print(self.output_offsets)
         if self.type == "image":
@@ -200,3 +198,11 @@ class OnlineSurrogateModel:
         print("Ellapsed time: " + str(t2 - t1))
 
         return output
+
+
+def load_model_info(model_file):
+    model_info = {}
+    with h5py.File(model_file, "r") as h5:
+        model_info = dict(h5.attrs)
+
+    return model_info

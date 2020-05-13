@@ -25,6 +25,7 @@ class SimDriver(Driver):
     def read(self, reason):
 
         if reason in self.output_pv_state:
+            print(reason)
             value = self.get_noisy_pv(reason)
         else:
             value = self.getParam(reason)
@@ -90,9 +91,7 @@ class SyncedSimPVServer:
     and publishes updated model data to output EPICS PVs.  Assumes fast model execution, as the model executes
     in the main CAS server thread.  CAS for the input and ouput PVs is handled by the SimDriver object"""
 
-    def __init__(
-        self, name, input_pvdb, output_pvdb, noise_params, model, sim_params=None
-    ):
+    def __init__(self, name, input_pvdb, output_pvdb, model, noise_params=None):
 
         self.name = name
 
@@ -107,22 +106,30 @@ class SyncedSimPVServer:
             self.pvdb[pv] = input_pvdb[pv]
             self.input_pv_state[pv] = input_pvdb[pv]["value"]
 
+        starting_output = self.model.run(self.input_pv_state, verbose=True)
+
         output_pv_state = {}
         for pv in output_pvdb:
             self.pvdb[pv] = output_pvdb[pv]
-            output_pv_state[pv] = output_pvdb[pv]["value"]
 
-        for pv in output_pvdb:
-            if pv in noise_params:
-                self.pvdb[pv + ":sigma"] = {
-                    "type": "float",
-                    "value": noise_params[pv]["sigma"],
-                }
-                self.pvdb[pv + ":dist"] = {
-                    "type": "char",
-                    "count": 100,
-                    "value": noise_params[pv]["dist"],
-                }
+            # if an array process variable, add count to the db entry
+            if isinstance(starting_output[pv], (np.ndarray,)):
+                self.pvdb[pv]["count"] = len(starting_output[pv])
+
+            output_pv_state[pv] = starting_output[pv]
+
+        if noise_params:
+            for pv in output_pvdb:
+                if pv in noise_params:
+                    self.pvdb[pv + ":sigma"] = {
+                        "type": "float",
+                        "value": noise_params[pv]["sigma"],
+                    }
+                    self.pvdb[pv + ":dist"] = {
+                        "type": "char",
+                        "count": 100,
+                        "value": noise_params[pv]["dist"],
+                    }
 
         prefix = self.name + ":"
         self.server = SimpleServer()
@@ -131,10 +138,6 @@ class SyncedSimPVServer:
         self.driver = SimDriver(self.input_pv_state, output_pv_state, noise_params)
 
         self.serve_data = False
-        self.sim_params = sim_params
-
-    def set_sim_params(**params):
-        self.sim_params = params
 
     def start_server(self):
 
