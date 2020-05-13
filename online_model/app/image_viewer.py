@@ -1,7 +1,10 @@
 import numpy as np
 import json
+import copy
+from argparse import ArgumentParser
 
-from epics import caget_many, PV
+from epics import caget, PV, cainfo
+from p4p.client.thread import Context
 
 from bokeh.plotting import figure
 from bokeh.models.widgets import Select
@@ -9,9 +12,33 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource
 
-# from bokeh.palettes import magma
-
 from bokeh import palettes, colors
+
+from online_model import PREFIX, SIM_PVDB
+
+
+# Parse arguments passed through bokeh serve
+# requires protocol to be set
+parser = ArgumentParser()
+parser.add_argument(
+    "-p",
+    "--protocol",
+    metavar="PROTOCOL",
+    nargs=1,
+    type=str,
+    choices=["pva", "ca"],
+    help="Protocol to use (ca, pva)",
+    required=True,
+)
+args = parser.parse_args()
+
+PROTOCOL = args.protocol[0]
+
+# initialize context for pva
+CONTEXT = None
+if PROTOCOL == "pva":
+    CONTEXT = Context("pva")
+
 
 pal = palettes.Viridis[256]
 white = colors.named.white
@@ -21,16 +48,24 @@ white = colors.named.white
 class PVImageMonitor:
     def __init__(self, pvname, units):
         self.pvname = pvname
+        print(pvname)
         self.pv = PV(pvname, auto_monitor=True)
         self.units = units
 
     def poll(self):
-        data = self.pv.value
+        if PROTOCOL == "ca":
+            # self.pv = PV(pv, auto_monitor=True)
+            data = caget(self.pvname)
+
+        elif PROTOCOL == "pva":
+            # context returns np array with WRITEABLE=False
+            # copy to manipulate array below
+            data = copy.copy(CONTEXT.get(self.pvname))
+
         nx = data[0]
         ny = data[1]
         ext = data[2:6]
 
-        print(ext)
         image = data[6:]
         image[np.where(image <= 0)] = 0  # Set negative to zero
         image = image.reshape(int(nx), int(ny))
@@ -43,15 +78,10 @@ class PVImageMonitor:
         return self.pvname.split(":")
 
 
-with open("pvdef.json") as json_file:
-    pvdefs = json.load(json_file)
-prefix = pvdefs["prefix"]
-
 pvimages = {}
-for opv in pvdefs["output"].keys():
-
-    if len(pvdefs["output"][opv]["units"].split(":")) == 2:
-        pvimages[opv] = PVImageMonitor(prefix + opv, pvdefs["output"][opv]["units"])
+for opv in SIM_PVDB:
+    if len(SIM_PVDB[opv]["units"].split(":")) == 2:
+        pvimages[opv] = PVImageMonitor(f"{PREFIX}:{opv}", SIM_PVDB[opv]["units"])
 
 current_pv = list(pvimages.keys())[0]
 
