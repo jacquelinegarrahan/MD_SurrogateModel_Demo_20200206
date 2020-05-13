@@ -1,0 +1,14 @@
+name: online-surrogate-model-dev
+dependencies:
+  - python=3.7
+  - epics-base=7.0.3.1
+  - conda-forge::pcaspy=0.7.2
+  - scikit-learn=0.21.3
+  - conda-forge::pyepics
+  - conda-forge::p4p=3.4.2
+  - h5py
+  - bokeh
+  - click
+  - pip:
+    - tensorflow==1.15.0
+    - keras==2.2.4

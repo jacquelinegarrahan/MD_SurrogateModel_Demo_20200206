@@ -14,6 +14,9 @@ $ conda create -n smdemo -c conda-forge python=3.7 tensorflow keras pyepics pcas
 ```
 $ conda activate smdemo
 ```
+
+Tensorflow is installed using CPU only.
+
 pcaspy requires an EPICS install and has instructions on its website:
 https://pcaspy.readthedocs.io/en/latest/
 
@@ -47,3 +50,13 @@ You may receive many Tensorflow warnings, due to depreciation - these can be ign
 It may be necessary to add a path to the epics installation in your .bashrc or .bash_profile
 
 Please contact Lipi Gupta, lgupta@slac.stanford.edu if you have further issues
+
+
+NOTE: version of scikit-learn & scalar load
+
+## Development
+
+In addition to the project environmment a .yml file has been included for a development environment `environment-dev.yml`. If using this library, you can also make use of the package pre-commit hooks, which will format the code using black formatting (https://github.com/psf/black) before committing to the actual package.
+
+These can be set up by running the following command inside the `online-surrogate-model-dev` conda environment:
+`pre-commit install`
