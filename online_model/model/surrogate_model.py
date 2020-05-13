@@ -1,6 +1,8 @@
 import numpy as np
 import sys, os
 import time
+from abc import ABC, abstractmethod
+
 import keras
 import tensorflow as tf
 from keras.models import Sequential, Model, model_from_json
@@ -11,38 +13,61 @@ import pprint
 import pickle
 import sklearn
 
+from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
+
 
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
 
-# TODO: create base model class that surrogate image and surrogate scalar inherit from
+# reconstruct missing scaler object
+# using same method names as the MinMaxScaler sci-kit learn method
+# to be consistent with the pickled image scaler
+class ReconstructedScaler:
+    def __init__(
+        self,
+        input_scales,
+        input_offsets,
+        output_scales,
+        output_offsets,
+        min_value,
+        max_value,
+    ):
+        self.input_scales = input_scales
+        self.input_offsets = input_offsets
+        self.output_scales = output_scales
+        self.output_offsets = output_offsets
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def transform(self, values):
+        return (
+            self.min_value
+            + (values - self.input_offsets)
+            * (self.max_value - self.min_value)
+            / self.input_scales
+        )
+
+    def inverse_transform(self, values):
+        return (
+            (values - self.min_value)
+            * self.output_scales
+            / (self.max_value - self.min_value)
+        ) + self.output_offsets
 
 
-class SurrogateModel:
+class SurrogateModel(ABC):
     """
-Example Usage:
-    Load model and use a dictionary of inputs to evaluate the NN.
+
+    Use of the abstract base class SurrogateMode requires implementation of predict, scale, and
     """
 
-    def __init__(self, model_file=None):
-        # Save init
+    def __init__(self, model_file):
         self.model_file = model_file
 
-        # Run control
-        self.configure()
-
-    def __str__(self):
-        if self.type == "scalar":
-            s = f"""The inputs are: {', '.join(self.input_names)} and the outputs: {', '.join(self.output_names)}"""
-        elif self.type == "image":
-            s = f"""The inputs are: {', '.join(self.input_names)} and the output is an image of LPS."""
-        return s
-
-    def configure(self):
-        ## Open the File
-        model_info = load_model_info(self.model_file)
-        self.__dict__.update(model_info)
-        self.json_string = self.JSON
+    def configure(self, model_info) -> None:
+        # Open the File
+        self.json_string = model_info["JSON"]
+        self.input_ordering = model_info["input_ordering"]
 
         # load model in thread safe manner
         self.thread_graph = tf.Graph()
@@ -52,149 +77,141 @@ Example Usage:
                 self.model = model_from_json(self.json_string.decode("utf-8"))
                 self.model.load_weights(self.model_file)
 
-        ## Set basic values needed for input and output scaling
-        self.model_value_max = model_info["upper"]
-        self.model_value_min = model_info["lower"]
-        # print(self.output_scales)
-        # print(self.output_offsets)
-        if self.type == "image":
-            self.image_scale = self.output_scales[-1]
-            self.image_offset = self.output_offsets[-1]
-            self.output_scales = self.output_scales[:-1]
-            self.output_offsets = self.output_offsets[:-1]
+    @abstractmethod
+    def predict(self):
+        pass
 
-    def scale_inputs(self, input_values):
-        data_scaled = self.model_value_min + (
-            (input_values - self.input_offsets)
-            * (self.model_value_max - self.model_value_min)
-            / self.input_scales
+    @abstractmethod
+    def evaluate(self):
+        pass
+
+
+class ScalarSurrogateModel(SurrogateModel):
+    def __init__(self, model_file):
+        super().__init__(model_file)
+
+        # load model info
+        model_info = load_model_info(model_file)
+
+        self.output_ordering = model_info["output_ordering"]
+
+        # reconstruct scaler from model info
+        self.scaler = ReconstructedScaler(
+            model_info["input_scales"],
+            model_info["input_offsets"],
+            model_info["output_scales"],
+            model_info["output_offsets"],
+            model_info["lower"],
+            model_info["upper"],
         )
-        return data_scaled
 
-    def scale_outputs(self, output_values):
-        data_scaled = self.model_value_min + (
-            (output_values - self.output_offsets)
-            * (self.model_value_max - self.model_value_min)
-            / self.output_scales
-        )
-        return data_scaled
+        # Configure model attributes and setup model session
+        self.configure(model_info)
 
-    def scale_image(self, image_values):
-        # data_scaled = 2*((image_values/self.image_scale)-self.image_offset)
-        data_scaled = transformer_y.transform(image_values)
-        return data_scaled
+    # dunder method conserved from initial implementation
+    def __str__(self):
+        return f"The inputs are: {', '.join(self.input_names)} and the outputs: {', '.join(self.output_names)}"
 
-    def unscale_image(self, image_values):
-        # data_scaled = (((image_values/2)+self.image_offset)*self.image_scale)
-        data_scaled = transformer_y.inverse_transform(image_values)
-        return data_scaled
+    def evaluate(self, settings) -> dict:
+        vec = np.array([[settings[key] for key in self.input_ordering]])
+        model_output = self.predict(vec)
+        return dict(zip(self.output_ordering, model_output.T))
 
     def predict(self, input_values):
-        inputs_scaled = self.scale_inputs(input_values)
+        inputs_scaled = self.scaler.transform(input_values)
+
         # call thread-safe predictions
         with self.thread_graph.as_default():
             with self.thread_session.as_default():
                 predicted_outputs = self.model.predict(inputs_scaled)
-        predicted_outputs_unscaled = self.unscale_outputs(predicted_outputs)
+
+        predicted_outputs_unscaled = self.scaler.inverse_transform(predicted_outputs)
         return predicted_outputs_unscaled
 
-    def predict_image(self, input_values, plotting=True):
-        inputs_scaled = self.scale_inputs(input_values)
+
+class ImageSurrogateModel(SurrogateModel):
+    def __init__(self, model_file):
+        super().__init__(model_file)
+
+        # load model info
+        model_info = load_model_info(model_file)
+
+        # store image specific keys from model_info
+        self.ndim = model_info["ndim"]
+        self.bins = model_info["bins"]
+
+        # reconstruct scaler from model info
+        self.scaler = ReconstructedScaler(
+            model_info["input_scales"],
+            model_info["input_offsets"],
+            model_info["output_scales"][:-1],  # exclude array from scale
+            model_info["output_offsets"][:-1],  # exclude array from offset
+            model_info["lower"],
+            model_info["upper"],
+        )
+
+        # set image scaler
+        self.image_scaler = transformer_y
+
+        # Configure model attributes and setup model session
+        self.configure(model_info)
+
+    # dunder method conserved from initial implementation
+    def __str__(self):
+        return f"The inputs are: {', '.join(self.input_names)} and the output is an image of LPS."
+
+    def evaluate(self, settings):
+        vec = np.array([[settings[key] for key in self.input_ordering]])
+        output, extent = self.predict(vec)
+        return output, extent
+
+    def predict(self, input_values, plotting=True):
+        inputs_scaled = self.scaler.transform(input_values)
+
         # call thread-safe predictions
         with self.thread_graph.as_default():
             with self.thread_session.as_default():
                 predicted_outputs = self.model.predict(inputs_scaled)
 
-        predicted_outputs_limits = self.unscale_outputs(
+        predicted_outputs_limits = self.scaler.inverse_transform(
             predicted_outputs[:, : self.ndim[0]]
         )
-        predicted_outputs_image = self.unscale_image(
+
+        predicted_outputs_image = self.image_scaler.inverse_transform(
             predicted_outputs[:, self.ndim[0] :]
         )
-        # predicted_outputs_unscaled = np.concatenate((predicted_outputs_limits, predicted_outputs_image), axis = 1)
-        # predicted_outputs_unscaled = predicted_outputs
+
         return predicted_outputs_image, predicted_outputs_limits
-
-    def unscale_inputs(self, input_values):
-        data_unscaled = (
-            (input_values - self.model_value_min)
-            * (self.input_scales)
-            / (self.model_value_max - self.model_value_min)
-        ) + self.input_offsets
-        return data_unscaled
-
-    def unscale_outputs(self, output_values):
-        data_unscaled = (
-            (output_values - self.model_value_min)
-            * (self.output_scales)
-            / (self.model_value_max - self.model_value_min)
-        ) + self.output_offsets
-        return data_unscaled
-
-    def evaluate(self, settings):
-
-        if self.type == "image":
-            print(
-                "To evaluate an image NN, please use the method .evaluateImage(settings)."
-            )
-            output = 0
-        else:
-            vec = np.array([[settings[key] for key in self.input_ordering]])
-            model_output = self.predict(vec)
-
-            output = dict(zip(self.output_ordering, model_output.T))
-        return output
-
-    def evaluate_image(self, settings, position_scale=10e6):
-        vec = np.array([[settings[key] for key in self.input_ordering]])
-        model_output, extent = self.predict_image(vec)
-        output = model_output.reshape((int(self.bins[0]), int(self.bins[1])))
-        return output, extent
-
-    def evaluate_image_array(self, settings, position_scale=10e6):
-        vec = np.array([[settings[key] for key in self.input_ordering]])
-        output, extent = self.predict_image(vec)
-        return output, extent
-
-    def generate_random_input(self):
-        values = np.zeros(len(self.input_ordering))
-        for i in range(len(self.input_ordering)):
-            values[i] = random.uniform(self.input_ranges[i][0], self.input_ranges[i][1])
-        return dict(zip(self.input_ordering, values.T))
-
-    def random_evaluate(self):
-        individual = self.generate_random_input()
-        if self.type == "scalar":
-            random_eval_output = self.evaluate(individual)
-        else:
-            random_eval_output, extent = self.evaluate_image(individual)
-            print("Output Generated")
-            print(extent)
-        return random_eval_output
 
 
 class OnlineSurrogateModel:
-    def __init__(self):
+    """
 
-        self.scalar_model = SurrogateModel(
-            model_file="online_model/files/Scalar_NN_SurrogateModel.h5"
-        )
-        self.image_model = SurrogateModel(
-            model_file="online_model/files/YAG_NN_SurrogateModel.h5"
-        )
+    TODO:
+    Include note about defaults
+    Refactor run and create utility function for manual scaling
+
+
+    """
+
+    def __init__(
+        self, scalar_model_file=SCALAR_MODEL_FILE, image_model_file=YAG_MODEL_FILE
+    ):
+
+        self.scalar_model = ScalarSurrogateModel(scalar_model_file)
+        self.image_model = ImageSurrogateModel(image_model_file)
 
     def run(self, pv_state, verbose=True):
 
         t1 = time.time()
         print("Running model...", end="")
         scalar_data = self.scalar_model.evaluate(pv_state)
-        image_array, ext = self.image_model.evaluate_image(pv_state)
 
         output = {}
         for scalar in scalar_data:
             output[scalar] = scalar_data[scalar][0]
 
-        image_array, ext = self.image_model.evaluate_image_array(pv_state)
+        image_array, ext = self.image_model.evaluate(pv_state)
         print(ext)
         ext = [
             ext[0, 0],
