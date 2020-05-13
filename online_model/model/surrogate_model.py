@@ -81,10 +81,6 @@ class SurrogateModel(ABC):
     def predict(self):
         pass
 
-    @abstractmethod
-    def evaluate(self):
-        pass
-
 
 class ScalarSurrogateModel(SurrogateModel):
     def __init__(self, model_file):
@@ -112,12 +108,8 @@ class ScalarSurrogateModel(SurrogateModel):
     def __str__(self):
         return f"The inputs are: {', '.join(self.input_names)} and the outputs: {', '.join(self.output_names)}"
 
-    def evaluate(self, settings) -> dict:
-        vec = np.array([[settings[key] for key in self.input_ordering]])
-        model_output = self.predict(vec)
-        return dict(zip(self.output_ordering, model_output.T))
-
-    def predict(self, input_values):
+    def predict(self, settings) -> dict:
+        input_values = np.array([[settings[key] for key in self.input_ordering]])
         inputs_scaled = self.scaler.transform(input_values)
 
         # call thread-safe predictions
@@ -126,7 +118,7 @@ class ScalarSurrogateModel(SurrogateModel):
                 predicted_outputs = self.model.predict(inputs_scaled)
 
         predicted_outputs_unscaled = self.scaler.inverse_transform(predicted_outputs)
-        return predicted_outputs_unscaled
+        return dict(zip(self.output_ordering, predicted_outputs_unscaled.T))
 
 
 class ImageSurrogateModel(SurrogateModel):
@@ -160,12 +152,8 @@ class ImageSurrogateModel(SurrogateModel):
     def __str__(self):
         return f"The inputs are: {', '.join(self.input_names)} and the output is an image of LPS."
 
-    def evaluate(self, settings):
-        vec = np.array([[settings[key] for key in self.input_ordering]])
-        output, extent = self.predict(vec)
-        return output, extent
-
-    def predict(self, input_values, plotting=True):
+    def predict(self, settings, plotting=True):
+        input_values = np.array([[settings[key] for key in self.input_ordering]])
         inputs_scaled = self.scaler.transform(input_values)
 
         # call thread-safe predictions
@@ -205,13 +193,13 @@ class OnlineSurrogateModel:
 
         t1 = time.time()
         print("Running model...", end="")
-        scalar_data = self.scalar_model.evaluate(pv_state)
+        scalar_data = self.scalar_model.predict(pv_state)
 
         output = {}
         for scalar in scalar_data:
             output[scalar] = scalar_data[scalar][0]
 
-        image_array, ext = self.image_model.evaluate(pv_state)
+        image_array, ext = self.image_model.predict(pv_state)
         print(ext)
         ext = [
             ext[0, 0],
