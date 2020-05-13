@@ -3,15 +3,11 @@ import sys, os
 import time
 from abc import ABC, abstractmethod
 
-import keras
 import tensorflow as tf
-from keras.models import Sequential, Model, model_from_json
-from keras.layers import Input, Dense, Activation
+from keras.models import model_from_json
 import h5py
 import random
-import pprint
 import pickle
-import sklearn
 
 from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
 
@@ -152,7 +148,7 @@ class ImageSurrogateModel(SurrogateModel):
     def __str__(self):
         return f"The inputs are: {', '.join(self.input_names)} and the output is an image of LPS."
 
-    def predict(self, settings, plotting=True):
+    def predict(self, settings):
         input_values = np.array([[settings[key] for key in self.input_ordering]])
         inputs_scaled = self.scaler.transform(input_values)
 
@@ -189,7 +185,7 @@ class OnlineSurrogateModel:
         self.scalar_model = ScalarSurrogateModel(scalar_model_file)
         self.image_model = ImageSurrogateModel(image_model_file)
 
-    def run(self, pv_state, verbose=True):
+    def run(self, pv_state):
 
         t1 = time.time()
         print("Running model...", end="")
