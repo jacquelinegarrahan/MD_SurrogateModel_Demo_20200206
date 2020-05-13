@@ -1,12 +1,12 @@
 import random
 import threading
 
-from p4p.nt import NTScalar
+from p4p.nt import NTScalar, NTNDArray
 from p4p.server.thread import SharedPV
 from p4p.server import Server
 
-from online_model.model.surrogate_model import SurrogateModel
-from online_model import PREFIX, MODEL_FILE
+from online_model.model.surrogate_model import OnlineSurrogateModel
+from online_model import PREFIX
 
 providers = {}
 input_pvs = {}
@@ -14,7 +14,7 @@ input_pvs = {}
 # subclass threading.local
 class ModelLoader(threading.local):
     def __init__(self):
-        self.model = SurrogateModel(model_file=MODEL_FILE)
+        self.model = OnlineSurrogateModel()
 
 
 # initialize loader for model
@@ -42,7 +42,7 @@ class InputHandler:
 
 
 class PVAServer:
-    def __init__(self, in_pvdb, out_pvdb, model):
+    def __init__(self, in_pvdb, out_pvdb):
 
         global providers
 
@@ -72,7 +72,10 @@ class PVAServer:
 
             # use default handler for the output process variables
             # updates are handled from post calls within the input update processing
-            pv = SharedPV(nt=NTScalar("d"), initial=out_pvdb[out_pv]["value"])
+            if isinstance(out_pvdb[out_pv]["value"], (float,)):
+                pv = SharedPV(nt=NTScalar("d"), initial=out_pvdb[out_pv]["value"])
+            else:
+                pv = SharedPV(nt=NTNDArray(), initial=out_pvdb[out_pv]["value"])
             providers[pvname] = pv
 
     def start_server(self):
