@@ -1,9 +1,8 @@
 import numpy as np
-import json
 import copy
 from argparse import ArgumentParser
 
-from epics import caget, PV, cainfo
+from epics import caget, PV
 from p4p.client.thread import Context
 
 from bokeh.plotting import figure
@@ -48,8 +47,6 @@ white = colors.named.white
 class PVImageMonitor:
     def __init__(self, pvname, units):
         self.pvname = pvname
-        print(pvname)
-        self.pv = PV(pvname, auto_monitor=True)
         self.units = units
 
     def poll(self):
@@ -151,31 +148,6 @@ def update():
             "dh": [ext[3] - ext[2]],
         }
     )
-
-    # current_index = get_screen_index(
-
-    # global current_index
-    # avgxs = avgx_monitor.get_pv_array(1000)
-    # avgys = avgy_monitor.get_pv_array(1000)
-    # stdxs = stdx_monitor.get_pv_array(1000)
-    # stdys = stdy_monitor.get_pv_array(1000)
-
-    # if(current_index is not None):
-
-    #    avgx = avgxs[current_index]
-    #    avgy = avgys[current_index]
-    #    stdx = stdxs[current_index]
-    #    stdy = stdys[current_index]
-
-    # else:
-
-    #    avgx = float("NaN")
-    #    avgy = float("NaN")
-    #    stdx = float("NaN")
-    #    stdy = float("NaN")
-
-    # img = gaus2d(x,y,avgx,avgy,stdx,stdy)
-    # img_obj.data_source.data.update({'image': [img]})
 
 
 curdoc().add_root(column(row(select), row(p), width=300))

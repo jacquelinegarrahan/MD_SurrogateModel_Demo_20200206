@@ -71,7 +71,7 @@ class PVAServer:
             pvname = f"{PREFIX}:{out_pv}"
 
             # use default handler for the output process variables
-            # updates are handled from post calls within the input update processing
+            # updates to output pvs are handled from post calls within the input update processing
             if isinstance(starting_output[out_pv], (float,)):
                 pv = SharedPV(nt=NTScalar("d"), initial=starting_output[out_pv])
             else:

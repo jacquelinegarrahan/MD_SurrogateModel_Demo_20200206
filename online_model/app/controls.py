@@ -1,19 +1,13 @@
 import numpy as np
-import math
 from argparse import ArgumentParser
-
-import json
 
 from epics import caget, caput
 from p4p.client.thread import Context
 
-from bokeh.driving import count
 from bokeh.io import curdoc
 from bokeh.models import ColumnDataSource, Slider
 from bokeh.plotting import figure
 from bokeh.layouts import column, row
-from bokeh.models.glyphs import MultiLine
-from bokeh.models.glyphs import VArea
 
 from online_model import CMD_PVDB, PREFIX
 
