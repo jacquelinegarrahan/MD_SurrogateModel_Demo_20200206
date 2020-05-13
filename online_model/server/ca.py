@@ -1,12 +1,10 @@
-# from matrix_tracker import lattice
 import copy
-import multiprocessing
-from pcaspy import Driver, SimpleServer
 import time
-from epics import caget, PV
 import numpy as np
 import random
-import json
+
+from epics import caget, PV
+from pcaspy import Driver, SimpleServer
 
 
 class SimDriver(Driver):
@@ -23,9 +21,7 @@ class SimDriver(Driver):
             self.noise_params = {}
 
     def read(self, reason):
-
         if reason in self.output_pv_state:
-            print(reason)
             value = self.get_noisy_pv(reason)
         else:
             value = self.getParam(reason)
@@ -56,16 +52,16 @@ class SimDriver(Driver):
         if post_updates:
             self.updatePVs()
 
-    def set_pvs(self, pvs):
+    # def set_pvs(self, pvs):
 
-        post_updates = False
+    #    post_updates = False
 
-        for pv in pvs:
-            self.setParam(pv, pvs[pv])
-            post_updates = True
+    #    for pv in pvs:
+    #        self.setParam(pv, pvs[pv])
+    #        post_updates = True
 
-        if post_updates:
-            self.updatePVs()
+    #    if post_updates:
+    #        self.updatePVs()
 
     def get_noisy_pv(self, pv):
 
@@ -102,11 +98,10 @@ class SyncedSimPVServer:
         self.model = model
 
         for pv in input_pvdb:
-            # print(pv)
             self.pvdb[pv] = input_pvdb[pv]
             self.input_pv_state[pv] = input_pvdb[pv]["value"]
 
-        starting_output = self.model.run(self.input_pv_state, verbose=True)
+        starting_output = self.model.run(self.input_pv_state)
 
         output_pv_state = {}
         for pv in output_pvdb:
@@ -147,7 +142,7 @@ class SyncedSimPVServer:
 
         # Do initial simulation
         print("Initializing sim...")
-        output_pv_state = self.model.run(self.input_pv_state, verbose=True)
+        output_pv_state = self.model.run(self.input_pv_state)
         self.driver.set_output_pvs(output_pv_state)
         print("...done.")
 
@@ -158,7 +153,8 @@ class SyncedSimPVServer:
             while sim_pv_state != self.input_pv_state:
 
                 sim_pv_state = copy.deepcopy(self.input_pv_state)
-                output_pv_state = self.model.run(self.input_pv_state, verbose=True)
+                output_pv_state = self.model.run(self.input_pv_state)
+                print(output_pv_state)
                 self.driver.set_output_pvs(output_pv_state)
 
     def stop_server(self):
