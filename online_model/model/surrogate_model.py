@@ -2,7 +2,7 @@ import numpy as np
 import sys, os
 import time
 import keras
-import tensorflow
+import tensorflow as tf
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Input, Dense, Activation
 import h5py
@@ -14,6 +14,8 @@ import sklearn
 
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
+
+# TODO: create base model class that surrogate image and surrogate scalar inherit from
 
 
 class SurrogateModel:
@@ -41,8 +43,15 @@ Example Usage:
         model_info = load_model_info(self.model_file)
         self.__dict__.update(model_info)
         self.json_string = self.JSON
-        self.model = model_from_json(self.json_string.decode("utf-8"))
-        self.model.load_weights(self.model_file)
+
+        # load model in thread safe manner
+        self.thread_graph = tf.Graph()
+        with self.thread_graph.as_default():
+            self.thread_session = tf.Session()
+            with self.thread_session.as_default():
+                self.model = model_from_json(self.json_string.decode("utf-8"))
+                self.model.load_weights(self.model_file)
+
         ## Set basic values needed for input and output scaling
         self.model_value_max = model_info["upper"]
         self.model_value_min = model_info["lower"]
@@ -82,13 +91,20 @@ Example Usage:
 
     def predict(self, input_values):
         inputs_scaled = self.scale_inputs(input_values)
-        predicted_outputs = self.model.predict(inputs_scaled)
+        # call thread-safe predictions
+        with self.thread_graph.as_default():
+            with self.thread_session.as_default():
+                predicted_outputs = self.model.predict(inputs_scaled)
         predicted_outputs_unscaled = self.unscale_outputs(predicted_outputs)
         return predicted_outputs_unscaled
 
     def predict_image(self, input_values, plotting=True):
         inputs_scaled = self.scale_inputs(input_values)
-        predicted_outputs = self.model.predict(inputs_scaled)
+        # call thread-safe predictions
+        with self.thread_graph.as_default():
+            with self.thread_session.as_default():
+                predicted_outputs = self.model.predict(inputs_scaled)
+
         predicted_outputs_limits = self.unscale_outputs(
             predicted_outputs[:, : self.ndim[0]]
         )
@@ -116,6 +132,7 @@ Example Usage:
         return data_unscaled
 
     def evaluate(self, settings):
+
         if self.type == "image":
             print(
                 "To evaluate an image NN, please use the method .evaluateImage(settings)."
@@ -124,11 +141,11 @@ Example Usage:
         else:
             vec = np.array([[settings[key] for key in self.input_ordering]])
             model_output = self.predict(vec)
+
             output = dict(zip(self.output_ordering, model_output.T))
         return output
 
     def evaluate_image(self, settings, position_scale=10e6):
-
         vec = np.array([[settings[key] for key in self.input_ordering]])
         model_output, extent = self.predict_image(vec)
         output = model_output.reshape((int(self.bins[0]), int(self.bins[1])))

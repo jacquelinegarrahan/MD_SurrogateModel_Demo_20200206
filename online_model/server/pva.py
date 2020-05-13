@@ -32,7 +32,7 @@ class InputHandler:
         # now update output variables
         for pv_item, value in output_pv_state.items():
             output_provider = providers[f"{PREFIX}:{pv_item}"]
-            output_provider.post(value[0])
+            output_provider.post(value)
 
         # mark server operation as complete
         op.done()
