@@ -3,6 +3,7 @@ import h5py
 
 # set keras backend to tensorflow to prevent theano import errors
 os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = "1000000"
 
 from online_model.util import fix_units
 
@@ -21,6 +22,7 @@ YAG_MODEL_INFO = {}
 with h5py.File(YAG_MODEL_FILE, "r") as h5:
     YAG_MODEL_INFO = dict(h5.attrs)
 
+
 # Start with the nice example from Lipi
 DEFAULT_INPUTS = {
     "maxb(2)": 0.06125866317542922,
@@ -28,7 +30,6 @@ DEFAULT_INPUTS = {
     "q_total": 0.020414630732101164,
     "sig_x": 0.4065596830730608,
 }
-
 
 # Set up pvdbs
 CMD_PVDB = {}
@@ -59,7 +60,7 @@ SIM_PVDB["x:y"] = {
     # "value": list(default_output["x:y"]),
 }
 
-
+ARRAY_PVS = ["x:y"]
 # Add in noise
 # sim_pvdb["x_95coremit"]["scan"] = 0.2
 # noise_params = {"x_95coremit": {"sigma": 0.5e-7, "dist": "uniform"}}
