@@ -15,10 +15,30 @@ from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
 
-# reconstruct missing scaler object
-# using same method names as the MinMaxScaler sci-kit learn method
-# to be consistent with the pickled image scaler
+
 class ReconstructedScaler:
+    """
+    Object for performing appropriate scaling on inputs and outputs.
+
+    Attributes
+    ----------
+    input_scales: numpy.ndarray
+
+    input_offsets: numpy.ndarray
+
+    output_scales: numpy.ndarray
+
+    output_offsets: numpy.ndarray
+
+    min_value: numpy.int64
+
+    max_value: numpy.int64
+
+    Notes
+    -----
+    This object aims to reconstruct the original scaling method during model building. It uses the same method names as the scikit-learn transformation methods in order to be consistent with the provided pickled image scaler.
+    """
+
     def __init__(
         self,
         input_scales,
@@ -36,6 +56,14 @@ class ReconstructedScaler:
         self.max_value = max_value
 
     def transform(self, values):
+        """
+        Transforms input values to the model range.
+
+        Parameters
+        ----------
+        values: numpy.ndarray
+            Values to scale, the shape of the array should be (1, number of input pvs)
+        """
         return (
             self.min_value
             + (values - self.input_offsets)
@@ -44,6 +72,14 @@ class ReconstructedScaler:
         )
 
     def inverse_transform(self, values):
+        """
+        Transforms outputed model values to the appropriate range.
+
+        Parameters
+        ----------
+        values: numpy.ndarray
+            Values to scale, the shape of the array should be (1, number of output pvs - 1). The output process variable that is not scaled by the inverse transform is handled by the image scaler object.
+        """
         return (
             (values - self.min_value)
             * self.output_scales
@@ -53,16 +89,38 @@ class ReconstructedScaler:
 
 class SurrogateModel(ABC):
     """
+    Base class for the surrogate models that includes abstract predict method which must be initialized by children.
 
-    Use of the abstract base class SurrogateMode requires implementation of predict, scale, and
+    Attributes
+    ----------
+    model_file: str
+        Path to the model h5 file
+
+    input_ordering: numpy.ndarray
+        Array of process variable names that indicates order in other related attributes such as scales and offsets and indicates order in model input composition.
+
+    thread_graph: tensorflow.python.framework.ops.Graph
+
+    thread_session: tensorflow.python.client.session.Session
+
+    model: keras.engine.training.Model
+
     """
 
     def __init__(self, model_file):
         self.model_file = model_file
 
     def configure(self, model_info) -> None:
+        """
+        Stores fundamental input_ordering attribute from provided model info and loads and initializes the keras model in a threadsafe session.
+
+        Parameters
+        ----------
+        model_info: dict
+            Contains the model info dictionary loaded from the provided h5 model files.
+
+        """
         # Open the File
-        self.json_string = model_info["JSON"]
         self.input_ordering = model_info["input_ordering"]
 
         # load model in thread safe manner
@@ -70,11 +128,14 @@ class SurrogateModel(ABC):
         with self.thread_graph.as_default():
             self.thread_session = tf.Session()
             with self.thread_session.as_default():
-                self.model = model_from_json(self.json_string.decode("utf-8"))
+                self.model = model_from_json(model_info["JSON"].decode("utf-8"))
                 self.model.load_weights(self.model_file)
 
     @abstractmethod
     def predict(self):
+        """
+        Abstract prediction method that must be overwritten by inheriting classes.
+        """
         pass
 
 
