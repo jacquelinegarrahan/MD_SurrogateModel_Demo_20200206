@@ -1,10 +1,12 @@
 import numpy as np
 import sys, os
 import time
+from typing import Dict, Tuple, Mapping, Union
 from abc import ABC, abstractmethod
 
 import tensorflow as tf
 from keras.models import model_from_json
+from sklearn.preprocessing import MinMaxScaler
 import h5py
 import random
 import pickle
@@ -14,6 +16,10 @@ from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
 
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
+
+# model info files are loaded as dicts that map strings to numpy arrays, ints,
+# bytes, and strings
+ModelInfo = Mapping[str, Union[bytes, np.ndarray, str, np.int64]]
 
 
 class ReconstructedScaler:
@@ -89,7 +95,7 @@ class ReconstructedScaler:
 
 class SurrogateModel(ABC):
     """
-    Base class for the surrogate models that includes abstract predict method which must be initialized by children.
+    Base class for the surrogate models that includes abstract predict method, which must be initialized by children.
 
     Attributes
     ----------
@@ -140,12 +146,29 @@ class SurrogateModel(ABC):
 
 
 class ScalarSurrogateModel(SurrogateModel):
-    def __init__(self, model_file):
+    """
+    Class with specific attributes for scalar surrogate model.
+
+    Attributes
+    ----------
+    output_ordering:
+
+    """
+
+    def __init__(self, model_file: str):
+        """
+        Initialize ScalarSurrogateModel instance, create scaler, and configure the threadsafe model session.
+
+        Parameters
+        ----------
+        model_file: str
+            Filename of the scalar model
+
+        """
         super().__init__(model_file)
 
-        # load model info
+        # load model info and save scalar specific attributes
         model_info = load_model_info(model_file)
-
         self.output_ordering = model_info["output_ordering"]
 
         # reconstruct scaler from model info
@@ -161,11 +184,21 @@ class ScalarSurrogateModel(SurrogateModel):
         # Configure model attributes and setup model session
         self.configure(model_info)
 
-    # dunder method conserved from initial implementation
-    def __str__(self):
-        return f"The inputs are: {', '.join(self.input_names)} and the outputs: {', '.join(self.output_names)}"
+    def predict(self, settings: Dict[str, int]) -> Dict[str, np.ndarray]:
+        """
+        Given input process variable values, executes scalar model prediction.
 
-    def predict(self, settings) -> dict:
+        Parameters
+        ----------
+        settings: dict
+            Dictionary mapping input process variable names to values
+
+        Returns
+        -------
+        dict
+            Mapping of output process variables to single element numpy.ndarray containing the model output.
+
+        """
         input_values = np.array([[settings[key] for key in self.input_ordering]])
         inputs_scaled = self.scaler.transform(input_values)
 
@@ -175,19 +208,50 @@ class ScalarSurrogateModel(SurrogateModel):
                 predicted_outputs = self.model.predict(inputs_scaled)
 
         predicted_outputs_unscaled = self.scaler.inverse_transform(predicted_outputs)
+
         return dict(zip(self.output_ordering, predicted_outputs_unscaled.T))
 
 
 class ImageSurrogateModel(SurrogateModel):
-    def __init__(self, model_file):
+    """
+    Class with specific attributes for image surrogate model.
+
+    Attributes
+    ----------
+    ndim: numpy.int64
+        Number of non-image outputs.
+
+    bins: numpy.ndarray
+        Maybe shape of the image (x, y)
+
+    image_scaler: sklearn.preprocessing.data.MinMaxScaler
+        Scaler used for generating final image from image model outputs.
+    """
+
+    def __init__(
+        self, model_file: str, image_scaler: MinMaxScaler = transformer_y
+    ) -> None:
+        """
+        Initialize ImageSurrogateModel instance, create scaler, and configure the threadsafe model session.
+
+        Parameters
+        ----------
+        model_file: str
+            Filename of the image model
+
+        image_scaler: sklearn.preprocessing.data.MinMaxScaler
+            Pre-fit scaler for image outputs
+
+        """
         super().__init__(model_file)
 
         # load model info
         model_info = load_model_info(model_file)
 
         # store image specific keys from model_info
-        self.ndim = model_info["ndim"]
+        self.ndim = model_info["ndim"][0]
         self.bins = model_info["bins"]
+        self.image_scaler = transformer_y
 
         # reconstruct scaler from model info
         self.scaler = ReconstructedScaler(
@@ -199,17 +263,30 @@ class ImageSurrogateModel(SurrogateModel):
             model_info["upper"],
         )
 
-        # set image scaler
-        self.image_scaler = transformer_y
-
         # Configure model attributes and setup model session
         self.configure(model_info)
 
-    # dunder method conserved from initial implementation
-    def __str__(self):
-        return f"The inputs are: {', '.join(self.input_names)} and the output is an image of LPS."
+    def predict(self, settings: Dict[str, int]) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Given input process variable values, executes scalar model prediction.
 
-    def predict(self, settings):
+        Parameters
+        ----------
+        settings: dict
+            Dictionary mapping input process variable names to values
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of image elements
+
+        numpy.ndarray
+            Array of other image outputs
+
+        Notes
+        -----
+        TODO: ask about the other image output vars
+        """
         input_values = np.array([[settings[key] for key in self.input_ordering]])
         inputs_scaled = self.scaler.transform(input_values)
 
@@ -219,11 +296,11 @@ class ImageSurrogateModel(SurrogateModel):
                 predicted_outputs = self.model.predict(inputs_scaled)
 
         predicted_outputs_limits = self.scaler.inverse_transform(
-            predicted_outputs[:, : self.ndim[0]]
+            predicted_outputs[:, : self.ndim]
         )
 
         predicted_outputs_image = self.image_scaler.inverse_transform(
-            predicted_outputs[:, self.ndim[0] :]
+            predicted_outputs[:, self.ndim :]
         )
 
         return predicted_outputs_image, predicted_outputs_limits
@@ -231,25 +308,56 @@ class ImageSurrogateModel(SurrogateModel):
 
 class OnlineSurrogateModel:
     """
+    Class for running the executing both the scalar and image model.
 
+    Attributes
+    ----------
+    scalar_model: online_model.model.surrogate_model.ScalarSurrogateModel
+        Model instance used for predicting scalar outputs.
+
+    image_model: online_model.model.surrogate_model.ImageSurrogateModel
+        Model instance used for predicting image outputs.
+
+    NOTES
+    -----
     TODO:
-    Include note about defaults
-    Refactor run and create utility function for manual scaling
-
-
+    Understand the preprocessing here
     """
 
     def __init__(
-        self, scalar_model_file=SCALAR_MODEL_FILE, image_model_file=YAG_MODEL_FILE
-    ):
+        self,
+        scalar_model_file: str = SCALAR_MODEL_FILE,
+        image_model_file: str = YAG_MODEL_FILE,
+    ) -> None:
+        """
+        Initialize OnlineSurrogateModel instance using given scalar and image model files.
 
+        Parameters
+        ----------
+        scalar_model_file: str
+            File path to scalar model h5, defaults to SCALAR_MODEL_FILE loaded online_model.__init___
+
+        image_model_file: str
+            File path to image model h5, defaults to YAG_MODEL_FILE loaded in online_model.__init__
+        """
         self.scalar_model = ScalarSurrogateModel(scalar_model_file)
         self.image_model = ImageSurrogateModel(image_model_file)
 
-    def run(self, pv_state):
+    def run(self, pv_state: Dict[str, float]) -> Mapping[str, Union[float, np.ndarray]]:
+        """
+        Executes both scalar and image model given process variable value inputs.
 
+        Parameters
+        ----------
+        pv_state:
+
+        Returns
+        -------
+        dict
+            Mapping of process variables to model output values.
+
+        """
         t1 = time.time()
-        print("Running model...", end="")
         scalar_data = self.scalar_model.predict(pv_state)
 
         output = {}
@@ -257,29 +365,49 @@ class OnlineSurrogateModel:
             output[scalar] = scalar_data[scalar][0]
 
         image_array, ext = self.image_model.predict(pv_state)
-        print(ext)
-        ext = [
-            ext[0, 0],
-            ext[0, 1],
-            ext[0, 2],
-            ext[0, 3],
-        ]  # From Lipi: # At the moment there is some scaling done by hand, this can be changed!
 
-        image_values = np.zeros((2 + len(ext) + image_array.shape[1],))
-        image_values[0] = self.image_model.bins[0]
-        image_values[1] = self.image_model.bins[1]
-        image_values[2:6] = ext
-        image_values[6:] = image_array
+        # format image data for viewing
+        output["x:y"] = self.format_image_data(self.image_model.bins, image_array, ext)
 
-        # output['z:pz']=image_values
-        output["x:y"] = image_values
         t2 = time.time()
+        print("Running model...", end="")
         print("Ellapsed time: " + str(t2 - t1))
 
         return output
 
+    @staticmethod
+    def format_image_data(
+        bins: np.ndarray, image_array: np.ndarray, ext: list
+    ) -> np.ndarray:
+        # Note from Lipi: # At the moment there is some scaling done by hand, this can be changed!
 
-def load_model_info(model_file):
+        ext = [ext[0, 0], ext[0, 1], ext[0, 2], ext[0, 3]]
+
+        image_values = np.zeros((2 + len(ext) + image_array.shape[1],))
+        image_values[0] = bins[0]
+        image_values[1] = bins[1]
+        image_values[2:6] = ext
+        image_values[6:] = image_array
+
+        breakpoint()
+        return image_values
+
+
+def load_model_info(model_file: str) -> ModelInfo:
+    """
+    Utility function for loading model info.
+
+    Parameters
+    ----------
+    model_file: str
+        Filename of the image model
+
+    Returns
+    -------
+    dict
+        Dictionary containing info relevant to the model build.
+
+    """
     model_info = {}
     with h5py.File(model_file, "r") as h5:
         model_info = dict(h5.attrs)
