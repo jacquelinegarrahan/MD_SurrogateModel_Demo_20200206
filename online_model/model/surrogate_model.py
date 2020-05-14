@@ -17,6 +17,8 @@ from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
 
+# TODO: What are bins? What is ext?
+
 # model info files are loaded as dicts that map strings to numpy arrays, ints,
 # bytes, and strings
 ModelInfo = Mapping[str, Union[bytes, np.ndarray, str, np.int64]]
@@ -155,7 +157,7 @@ class ScalarSurrogateModel(SurrogateModel):
 
     """
 
-    def __init__(self, model_file: str):
+    def __init__(self, model_file: str) -> None:
         """
         Initialize ScalarSurrogateModel instance, create scaler, and configure the threadsafe model session.
 
@@ -222,7 +224,7 @@ class ImageSurrogateModel(SurrogateModel):
         Number of non-image outputs.
 
     bins: numpy.ndarray
-        Maybe shape of the image (x, y)
+        Maybe shape of the image (x, y) ?
 
     image_scaler: sklearn.preprocessing.data.MinMaxScaler
         Scaler used for generating final image from image model outputs.
@@ -266,7 +268,7 @@ class ImageSurrogateModel(SurrogateModel):
         # Configure model attributes and setup model session
         self.configure(model_info)
 
-    def predict(self, settings: Dict[str, int]) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, settings: Dict[str, int]) -> np.ndarray:
         """
         Given input process variable values, executes scalar model prediction.
 
@@ -303,7 +305,48 @@ class ImageSurrogateModel(SurrogateModel):
             predicted_outputs[:, self.ndim :]
         )
 
-        return predicted_outputs_image, predicted_outputs_limits
+        # format image data for viewing
+        image_output = self.format_image_data(
+            self.bins, predicted_outputs_image, predicted_outputs_limits
+        )
+
+        return image_output
+
+    @staticmethod
+    def format_image_data(
+        bins: np.ndarray, image_array: np.ndarray, ext: list
+    ) -> np.ndarray:
+        """
+        Formats data
+
+        Parameters
+        ----------
+        bins: np.ndarray
+            Maybe shape of the image (x, y) ?
+
+        image_array: np.ndarray
+            Array of unformatted image data
+
+        ext: list
+            Non-image outputs ?
+
+        Returns
+        -------
+        np.ndarray
+            Array of formatted image data
+        """
+
+        # Note from Lipi: # At the moment there is some scaling done by hand, this can be changed!
+
+        ext = [ext[0, 0], ext[0, 1], ext[0, 2], ext[0, 3]]
+
+        image_values = np.zeros((2 + len(ext) + image_array.shape[1],))
+        image_values[0] = bins[0]
+        image_values[1] = bins[1]
+        image_values[2:6] = ext
+        image_values[6:] = image_array
+
+        return image_values
 
 
 class OnlineSurrogateModel:
@@ -364,33 +407,14 @@ class OnlineSurrogateModel:
         for scalar in scalar_data:
             output[scalar] = scalar_data[scalar][0]
 
-        image_array, ext = self.image_model.predict(pv_state)
-
         # format image data for viewing
-        output["x:y"] = self.format_image_data(self.image_model.bins, image_array, ext)
+        output["x:y"] = self.image_model.predict(pv_state)
 
         t2 = time.time()
         print("Running model...", end="")
         print("Ellapsed time: " + str(t2 - t1))
 
         return output
-
-    @staticmethod
-    def format_image_data(
-        bins: np.ndarray, image_array: np.ndarray, ext: list
-    ) -> np.ndarray:
-        # Note from Lipi: # At the moment there is some scaling done by hand, this can be changed!
-
-        ext = [ext[0, 0], ext[0, 1], ext[0, 2], ext[0, 3]]
-
-        image_values = np.zeros((2 + len(ext) + image_array.shape[1],))
-        image_values[0] = bins[0]
-        image_values[1] = bins[1]
-        image_values[2:6] = ext
-        image_values[6:] = image_array
-
-        breakpoint()
-        return image_values
 
 
 def load_model_info(model_file: str) -> ModelInfo:
