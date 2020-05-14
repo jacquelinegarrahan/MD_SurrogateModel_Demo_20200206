@@ -167,7 +167,7 @@ class ScalarSurrogateModel(SurrogateModel):
             Filename of the scalar model
 
         """
-        super().__init__(model_file)
+        super(ScalarSurrogateModel, self).__init__(model_file)
 
         # load model info and save scalar specific attributes
         model_info = load_model_info(model_file)
@@ -245,7 +245,7 @@ class ImageSurrogateModel(SurrogateModel):
             Pre-fit scaler for image outputs
 
         """
-        super().__init__(model_file)
+        super(ImageSurrogateModel, self).__init__(model_file)
 
         # load model info
         model_info = load_model_info(model_file)
@@ -281,9 +281,6 @@ class ImageSurrogateModel(SurrogateModel):
         -------
         numpy.ndarray
             Array of image elements
-
-        numpy.ndarray
-            Array of other image outputs
 
         Notes
         -----
