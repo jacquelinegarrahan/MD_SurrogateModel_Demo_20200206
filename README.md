@@ -9,31 +9,28 @@ Dependencies for running the notebook include tensorflow version 1.15, and keras
 
 To get these modules:
 ```
-$ conda create -n smdemo -c conda-forge python=3.7 tensorflow keras pyepics pcaspy bokeh matplotlib scikit-learn h5py
+$ conda env create -f environment.yml $
 ```
 ```
-$ conda activate smdemo
+$ conda activate online-surrogate-model $
 ```
 
 Tensorflow is installed using CPU only.
 
-pcaspy requires an EPICS install and has instructions on its website:
-https://pcaspy.readthedocs.io/en/latest/
-
 
 ## To Run the Demo
 
-Open two terminal windows and three internet browser tabs/windows.
+Open two terminal windows and three internet browser tabs/windows. In each terminal, activate the online-surrogate-model conda environment.
 
-In the first terminal, type:
+In the first terminal, type (replacing) `protocol` with `pva` for PVAccess and `ca` for Channel Access:
 
 ```
-$ ./serve.sh
+$ python bin/cli.py serve start-server {protocol}
 ```
 In the other terminal:
 
 ```
-$ ./view.bash
+$ bokeh serve online_model/app/controls.py online_model/app/striptool.py online_model/app/image_viewer.py --args -p {protocol}
 ```
 
 In each of the three internet browser tabs/windows, open each of the GUIs:
@@ -44,15 +41,28 @@ http://localhost:5006/striptool
 
 http://localhost:5006/image_viewer
 
+
+
+The PVAccess process variables can be monitored in an additional terminal window (with the conda environment activated) with the command:
+```
+$ python -m p4p.client.cli monitor {pvname}
+```
+
+The metadata on the NTNDArray process variable can be accessed from the command line using the command:
+```
+$ python -m p4p.client.cli --raw get smvm:x:y
+```
+
+The Channel Access process variables can be monitored using the command:
+```
+$ caget {pvname}
+```
+
+
 ## Possible issues
 You may receive many Tensorflow warnings, due to depreciation - these can be ignored and will be fixed in the future.
 
-It may be necessary to add a path to the epics installation in your .bashrc or .bash_profile
-
 Please contact Lipi Gupta, lgupta@slac.stanford.edu if you have further issues
-
-
-NOTE: version of scikit-learn & scalar load
 
 ## Development
 
