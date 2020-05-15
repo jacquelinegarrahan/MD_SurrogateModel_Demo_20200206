@@ -1,4 +1,5 @@
 import copy
+import time
 
 from argparse import ArgumentParser
 from functools import partial
@@ -11,7 +12,7 @@ from bokeh.models import ColumnDataSource
 from epics import caget, caput
 from p4p.client.thread import Context
 
-from online_model import PREFIX
+from online_model import PREFIX, ARRAY_PVS
 
 
 # Parse arguments passed through bokeh serve
@@ -58,7 +59,7 @@ def set_pv_from_slider(attr, old, new, pvname: str, scale) -> None:
         CONTEXT.put(pvname, new * scale)
 
     elif PROTOCOL == "ca":
-        caput(self.pvname, new * scale)
+        caput(pvname, new * scale)
 
 
 def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
@@ -182,7 +183,7 @@ class PVImageMonitor:
         return self.pvname.split(":")
 
 
-class PlotController:
+class ImageController:
     def __init__(self, SIM_PVDB):
         self.pvimages = {}
 
@@ -238,3 +239,63 @@ class PlotController:
 
         # update data source
         self.img_obj.data_source.data.update(self.image_data)
+
+
+class PVMonitor:
+    def __init__(self, pvname, units):
+        self.pvname = pvname
+        self.units = units
+        self.tstart = time.time()
+        self.time = np.array([])
+        self.data = np.array([])
+
+    def poll(self):
+        t = time.time()
+
+        if PROTOCOL == "ca":
+            v = caget(self.pvname)
+
+        elif PROTOCOL == "pva":
+            v = CONTEXT.get(self.pvname)
+
+        self.time = np.append(self.time, t)
+        self.data = np.append(self.data, v)
+
+        return self.time - self.tstart, self.data
+
+    def get_units(self):
+        return self.units.split(":")
+
+
+class PlotController:
+    def __init__(self, SIM_PVDB):
+        self.pvmonitors = {}
+
+        # only creating pvs for non-image pvs
+        for opv in SIM_PVDB:
+            if opv not in ARRAY_PVS:
+                self.pvmonitors[opv] = PVMonitor(
+                    f"{PREFIX}:{opv}", SIM_PVDB[opv]["units"]
+                )
+
+        self.current_pv = list(self.pvmonitors.keys())[0]
+        ts, ys = self.pvmonitors[self.current_pv].poll()
+        self.source = ColumnDataSource(dict(x=ts, y=ys))
+
+    def build_plot(self):
+        self.p = figure(plot_width=400, plot_height=400)
+        self.p.line(x="x", y="y", line_width=2, source=self.source)
+        self.p.yaxis.axis_label = (
+            self.current_pv
+            + " ("
+            + self.pvmonitors[self.current_pv].get_units()[0]
+            + ")"
+        )
+        self.p.xaxis.axis_label = "time (sec)"
+
+    def update(self, current_pv):
+        self.current_pv = current_pv
+        ts, ys = self.pvmonitors[current_pv].poll()
+        units = self.pvmonitors[current_pv].get_units()[0]
+        self.source.data = dict(x=ts, y=ys * 1e6)
+        self.p.yaxis.axis_label = f"{current_pv} ({units})"
