@@ -17,7 +17,7 @@ from bokeh import palettes, colors
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB
-from online_model.app import ImageController
+from online_model.app.widgets.controllers import ImageController
 
 pal = palettes.Viridis[256]
 white = colors.named.white
@@ -31,7 +31,9 @@ current_pv = image_controller.current_pv
 
 # set up selection toggle
 select = Select(
-    title="Image PV", value=current_pv, options=list(image_controller.pvimages.keys())
+    title="Image PV",
+    value=current_pv,
+    options=list(image_controller.pv_monitors.keys()),
 )
 
 # Set up selection callback

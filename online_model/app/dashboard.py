@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB, CMD_PVDB
 from online_model.app.widgets.sliders import build_sliders
-from online_model.app import ImageController, PlotController
+from online_model.app.widgets.controllers import ImageController, PlotController
 
 pal = palettes.Viridis[256]
 white = colors.named.white
@@ -34,7 +34,7 @@ current_image_pv = image_controller.current_pv
 image_select = Select(
     title="Image PV",
     value=current_image_pv,
-    options=list(image_controller.pvimages.keys()),
+    options=list(image_controller.pv_monitors.keys()),
 )
 
 
@@ -75,7 +75,7 @@ def striptool_select_callback(attr, old, new):
 striptool_select = Select(
     title="PV to Plot:",
     value=current_striptool_pv,
-    options=list(plot_controller.pvmonitors.keys()),
+    options=list(plot_controller.pv_monitors.keys()),
 )
 striptool_select.on_change("value", striptool_select_callback)
 
