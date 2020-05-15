@@ -18,7 +18,7 @@ from bokeh.models.widgets import Select
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import SIM_PVDB
-from online_model.app import PlotController
+from online_model.app.widgets.controllers import PlotController
 
 # Set up the controller for the plot
 plot_controller = PlotController(SIM_PVDB)
@@ -29,7 +29,7 @@ current_pv = plot_controller.current_pv
 select = Select(
     title="PV to Plot:",
     value=current_pv,
-    options=list(plot_controller.pvmonitors.keys()),
+    options=list(plot_controller.pv_monitors.keys()),
 )
 
 # Set up selection callback
