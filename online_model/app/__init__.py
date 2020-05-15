@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from functools import partial
 from bokeh.models import Slider
+import numpy as np
 
 from epics import caget, caput
 from p4p.client.thread import Context
@@ -27,7 +28,24 @@ if PROTOCOL == "pva":
     CONTEXT = Context("pva")
 
 
-def set_pv_from_slider(attrname, old, new, pvname, scale):
+def set_pv_from_slider(attr, old, new, pvname: str, scale) -> None:
+    """
+    Callback function for slider change.
+
+    Parameters
+    ----------
+    attr
+
+    old
+
+    new
+
+    pvname: str
+        Process variable name
+
+    scale:
+
+    """
     if PROTOCOL == "pva":
         CONTEXT.put(pvname, new * scale)
 
@@ -35,7 +53,35 @@ def set_pv_from_slider(attrname, old, new, pvname, scale):
         caput(self.pvname, new * scale)
 
 
-def build_slider(title, pvname, scale, start, end, step):
+def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
+    """
+    Utility function for building a slider.
+
+    Parameters
+    ----------
+    title:str
+        Slider title
+
+    pvname:str
+        Process variable name
+
+    scale:float/int
+        Scale of the slider
+
+    start:float
+        Lower range of the slider
+
+    end:float
+        Upper range of the slider
+
+    step:np.float64
+        The step between consecutive values
+
+    Returns
+    -------
+    bokeh.models.widgets.sliders.Slider
+
+    """
 
     # initialize value
     start_val = None
@@ -48,6 +94,6 @@ def build_slider(title, pvname, scale, start, end, step):
         title=title, value=scale * start_val, start=start, end=end, step=step
     )
 
-    slider.on_change("value", partial(set_pv_from_slider, pvname, scale))
+    slider.on_change("value", partial(set_pv_from_slider, pvname=pvname, scale=scale))
 
     return slider

@@ -5,12 +5,12 @@ from epics import caget, caput
 from p4p.client.thread import Context
 
 from bokeh.io import curdoc
-from bokeh.models import ColumnDataSource, Slider
+from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 from bokeh.layouts import column, row
 
 from online_model import CMD_PVDB, PREFIX
-from online_model.app import PROTOCOL, build_slider
+from online_model.app import build_slider
 
 
 sliders = []
