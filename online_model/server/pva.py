@@ -2,12 +2,11 @@ import random
 import threading
 import numpy as np
 import time
-from typing import Dict, Tuple, Mapping, Union
+from typing import Dict, Mapping, Union
 
 from p4p.nt.ndarray import ntndarray as NTNDArrayData
 from p4p.nt import NTScalar, NTNDArray
 from p4p.server.thread import SharedPV
-from p4p.wrapper import Type, Value
 from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
@@ -18,9 +17,6 @@ providers = {}
 
 # global mapping of input process variable string to value
 input_pvs = {}
-
-
-from p4p.nt.scalar import ntwrappercommon
 
 
 class ModelLoader(threading.local):
