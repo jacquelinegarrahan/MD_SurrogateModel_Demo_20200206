@@ -6,10 +6,10 @@ Demonstrates the integration of surrogate model with both Channel Access and PVA
 The environment for this project is managed using conda. The environment can be created directly from the environment.yml file.
 
 ```
-$ conda env create -f environment.yml $
+$ conda env create -f environment.yml
 ```
 ```
-$ conda activate online-surrogate-model $
+$ conda activate online-surrogate-model
 ```
 
 Note: Tensorflow is installed via pip as outlined in the tensorflow documentation. It is installed using CPU only for this project.
