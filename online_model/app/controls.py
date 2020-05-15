@@ -9,7 +9,7 @@ from bokeh.layouts import column, row
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import CMD_PVDB
-from online_model.app import build_sliders
+from online_model.app.widgets.sliders import build_sliders
 
 # build sliders for the command process variable database
 sliders = build_sliders(CMD_PVDB)

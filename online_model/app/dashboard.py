@@ -17,7 +17,8 @@ from bokeh import palettes, colors
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB, CMD_PVDB
-from online_model.app import ImageController, PlotController, build_sliders
+from online_model.app.widgets.sliders import build_sliders
+from online_model.app import ImageController, PlotController
 
 pal = palettes.Viridis[256]
 white = colors.named.white
@@ -47,6 +48,15 @@ def on_image_selection(attrname, old, new):
 
 image_select.on_change("value", on_image_selection)
 
+# Set up image update callback
+def image_callback():
+    """
+    Calls plot controller update with the current global process variable
+    """
+    global current_image_pv
+    image_controller.update(current_image_pv)
+
+
 # build sliders for the command process variable database
 sliders = build_sliders(CMD_PVDB)
 slider_col = column(sliders, width=350)
@@ -69,6 +79,14 @@ striptool_select = Select(
 )
 striptool_select.on_change("value", striptool_select_callback)
 
+# Set up plot update callback
+def plot_callback():
+    """
+    Calls plot controller update with the current global process variable
+    """
+    global current_striptool_pv
+    plot_controller.update(current_striptool_pv)
+
 
 # Set up the document
 curdoc().title = "Online Surrogate Model Virtual Machine"
@@ -83,7 +101,5 @@ curdoc().add_root(
         width=300,
     )
 )
-curdoc().add_periodic_callback(partial(image_controller.update, current_image_pv), 250)
-curdoc().add_periodic_callback(
-    partial(plot_controller.update, current_striptool_pv), 250
-)
+curdoc().add_periodic_callback(image_callback, 250)
+curdoc().add_periodic_callback(plot_callback, 250)
