@@ -16,8 +16,8 @@ from bokeh import palettes, colors
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
-from online_model import PREFIX, SIM_PVDB
-from online_model.app import PlotController
+from online_model import PREFIX, SIM_PVDB, CMD_PVDB
+from online_model.app import PlotController, build_sliders
 
 pal = palettes.Viridis[256]
 white = colors.named.white
@@ -45,5 +45,11 @@ def on_selection(attrname, old, new):
 
 select.on_change("value", on_selection)
 
-curdoc().add_root(column(row(select), row(plot_controller.p), width=300))
+# build sliders for the command process variable database
+sliders = build_sliders(CMD_PVDB)
+scol = column(sliders, width=350)
+
+curdoc().title = "Online Surrogate Model Virtual Machine"
+
+curdoc().add_root(column(row(scol), row(select), row(plot_controller.p), width=300))
 curdoc().add_periodic_callback(partial(plot_controller.update, current_pv), 250)
