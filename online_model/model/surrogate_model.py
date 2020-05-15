@@ -13,7 +13,7 @@ import pickle
 
 from online_model import YAG_MODEL_FILE, SCALAR_MODEL_FILE
 
-
+# TODO: load this elsewhere
 scalerfile = "online_model/files/transformer_frontend_y_imgs.sav"
 transformer_y = pickle.load(open(scalerfile, "rb"))
 
@@ -44,7 +44,9 @@ class ReconstructedScaler:
 
     Notes
     -----
-    This object aims to reconstruct the original scaling method during model building. It uses the same method names as the scikit-learn transformation methods in order to be consistent with the provided pickled image scaler.
+    This object aims to reconstruct the original scaling method during model building.\\
+    It uses the same method names as the scikit-learn transformation methods in order \\
+    to be consistent with the provided pickled image scaler.
     """
 
     def __init__(
@@ -86,7 +88,9 @@ class ReconstructedScaler:
         Parameters
         ----------
         values: numpy.ndarray
-            Values to scale, the shape of the array should be (1, number of output pvs - 1). The output process variable that is not scaled by the inverse transform is handled by the image scaler object.
+            Values to scale, the shape of the array should be (1, number of output \\
+            pvs - 1). The output process variable that is not scaled by the inverse \\
+            transform is handled by the image scaler object.
         """
         return (
             (values - self.min_value)
@@ -97,7 +101,8 @@ class ReconstructedScaler:
 
 class SurrogateModel(ABC):
     """
-    Base class for the surrogate models that includes abstract predict method, which must be initialized by children.
+    Base class for the surrogate models that includes abstract predict method, which \\
+    must be initialized by children.
 
     Attributes
     ----------
@@ -105,7 +110,9 @@ class SurrogateModel(ABC):
         Path to the model h5 file
 
     input_ordering: numpy.ndarray
-        Array of process variable names that indicates order in other related attributes such as scales and offsets and indicates order in model input composition.
+        Array of process variable names that indicates order in other related \\
+        attributes such as scales and offsets and indicates order in model input \\
+        composition.
 
     thread_graph: tensorflow.python.framework.ops.Graph
 
@@ -120,7 +127,8 @@ class SurrogateModel(ABC):
 
     def configure(self, model_info) -> None:
         """
-        Stores fundamental input_ordering attribute from provided model info and loads and initializes the keras model in a threadsafe session.
+        Stores fundamental input_ordering attribute from provided model info and loads \\
+        and initializes the keras model in a threadsafe session.
 
         Parameters
         ----------
@@ -159,7 +167,8 @@ class ScalarSurrogateModel(SurrogateModel):
 
     def __init__(self, model_file: str) -> None:
         """
-        Initialize ScalarSurrogateModel instance, create scaler, and configure the threadsafe model session.
+        Initialize ScalarSurrogateModel instance, create scaler, and configure the \\
+        threadsafe model session.
 
         Parameters
         ----------
@@ -198,7 +207,8 @@ class ScalarSurrogateModel(SurrogateModel):
         Returns
         -------
         dict
-            Mapping of output process variables to single element numpy.ndarray containing the model output.
+            Mapping of output process variables to single element numpy.ndarray \\
+            containing the model output.
 
         """
         input_values = np.array([[settings[key] for key in self.input_ordering]])
@@ -234,7 +244,8 @@ class ImageSurrogateModel(SurrogateModel):
         self, model_file: str, image_scaler: MinMaxScaler = transformer_y
     ) -> None:
         """
-        Initialize ImageSurrogateModel instance, create scaler, and configure the threadsafe model session.
+        Initialize ImageSurrogateModel instance, create scaler, and configure the \\
+        threadsafe model session.
 
         Parameters
         ----------
@@ -302,7 +313,7 @@ class ImageSurrogateModel(SurrogateModel):
             predicted_outputs[:, self.ndim :]
         )
 
-        # format image data for viewing
+        # add extra image data
         image_output = self.format_image_data(
             self.bins, predicted_outputs_image, predicted_outputs_limits
         )
@@ -333,7 +344,8 @@ class ImageSurrogateModel(SurrogateModel):
             Array of formatted image data
         """
 
-        # Note from Lipi: # At the moment there is some scaling done by hand, this can be changed!
+        # Note from Lipi: # At the moment there is some scaling
+        # done by hand, this can be changed!
 
         ext = [ext[0, 0], ext[0, 1], ext[0, 2], ext[0, 3]]
 
@@ -370,15 +382,18 @@ class OnlineSurrogateModel:
         image_model_file: str = YAG_MODEL_FILE,
     ) -> None:
         """
-        Initialize OnlineSurrogateModel instance using given scalar and image model files.
+        Initialize OnlineSurrogateModel instance using given scalar and image model \\
+        files.
 
         Parameters
         ----------
         scalar_model_file: str
-            File path to scalar model h5, defaults to SCALAR_MODEL_FILE loaded online_model.__init___
+            File path to scalar model h5, defaults to SCALAR_MODEL_FILE loaded \\
+            online_model.__init___
 
         image_model_file: str
-            File path to image model h5, defaults to YAG_MODEL_FILE loaded in online_model.__init__
+            File path to image model h5, defaults to YAG_MODEL_FILE loaded in \\
+            online_model.__init__
         """
         self.scalar_model = ScalarSurrogateModel(scalar_model_file)
         self.image_model = ImageSurrogateModel(image_model_file)
