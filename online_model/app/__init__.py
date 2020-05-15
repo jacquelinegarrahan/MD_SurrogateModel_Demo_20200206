@@ -6,6 +6,7 @@ import numpy as np
 from epics import caget, caput
 from p4p.client.thread import Context
 
+
 # Parse arguments passed through bokeh serve
 # requires protocol to be set
 parser = ArgumentParser()

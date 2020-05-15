@@ -1,5 +1,7 @@
 import numpy as np
 import copy
+import sys
+import os
 from argparse import ArgumentParser
 
 from epics import caget, PV
@@ -12,6 +14,9 @@ from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource
 
 from bokeh import palettes, colors
+
+# fix for bokeh path error, maybe theres a better way to do this
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB
 

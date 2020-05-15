@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+import os
 from argparse import ArgumentParser
 
 from epics import caget, caput
@@ -8,6 +10,9 @@ from bokeh.io import curdoc
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 from bokeh.layouts import column, row
+
+# fix for bokeh path error, maybe theres a better way to do this
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import CMD_PVDB, PREFIX
 from online_model.app import build_slider
