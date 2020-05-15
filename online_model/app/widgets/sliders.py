@@ -4,7 +4,7 @@ import time
 from argparse import ArgumentParser
 from functools import partial
 import numpy as np
-from typing import Union
+from typing import Union, List
 
 from bokeh.plotting import figure
 from bokeh.models import Slider
@@ -79,11 +79,14 @@ def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
     """
 
     # initialize value
-    start_val = None
-    if PROTOCOL == "pva":
-        start_val = CONTEXT.get(pvname)
-    elif PROTOCOL == "ca":
-        start_val = caget(pvname)
+    try:
+        if PROTOCOL == "pva":
+            start_val = CONTEXT.get(pvname)
+        elif PROTOCOL == "ca":
+            start_val = caget(pvname)
+    except TimeoutError:
+        print(f"No process variable found for {pvname}")
+        start_val = 0
 
     slider = Slider(
         title=title, value=scale * start_val, start=start, end=end, step=step
@@ -94,8 +97,20 @@ def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
     return slider
 
 
-def build_sliders(CMD_PVDB):
+def build_sliders(CMD_PVDB: dict) -> List[Slider]:
+    """
+    Build sliders from the CMD_PVDB.
 
+    Parameters
+    ----------
+    CMD_PVDB: dict
+
+    Return
+    ------
+    list
+        List of slider objects
+
+    """
     sliders = []
 
     for ii, pv in enumerate(CMD_PVDB):
