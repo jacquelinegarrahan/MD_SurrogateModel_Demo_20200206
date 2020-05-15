@@ -1,13 +1,10 @@
 # MD_SurrogateModel_Demo_20200206
-Demonstration of the surrogate model and EPICS interface
+Demonstrates the integration of surrogate model with both Channel Access and PVAccess protocols.
 
-## Surrogate Model EPICS Interface Demo
-This demo was presented at the MD meeting at SLAC on Feb 6, 2020. The current state of this tool is only meant for demonstration. The full capabilities and further development of these tools is still in progress.
 
 ## Installation
-Dependencies for running the notebook include tensorflow version 1.15, and keras version 2.2.4.
+The environment for this project is managed using conda. The environment can be created directly from the environment.yml file.
 
-To get these modules:
 ```
 $ conda env create -f environment.yml $
 ```
@@ -15,7 +12,7 @@ $ conda env create -f environment.yml $
 $ conda activate online-surrogate-model $
 ```
 
-Tensorflow is installed using CPU only.
+Note: Tensorflow is installed via pip as outlined in the tensorflow documentation. It is installed using CPU only for this project.
 
 
 ## To Run the Demo
@@ -75,7 +72,7 @@ Please contact Lipi Gupta, lgupta@slac.stanford.edu if you have further issues
 
 ## Development
 
-In addition to the project environmment a .yml file has been included for a development environment `environment-dev.yml`. If using this library, you can also make use of the package pre-commit hooks, which will format the code using black formatting (https://github.com/psf/black) before committing to the actual package.
+In addition to the project environmment a .yml file has been included for a development environment `environment-dev.yml`. Using this environment, you can also make use of the package pre-commit hooks, which will format the code using black formatting (https://github.com/psf/black) before pushing any commits to github.
 
 These can be set up by running the following command inside the `online-surrogate-model-dev` conda environment:
 `pre-commit install`
