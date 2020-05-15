@@ -64,3 +64,6 @@ ARRAY_PVS = ["x:y"]
 # Add in noise
 # sim_pvdb["x_95coremit"]["scan"] = 0.2
 # noise_params = {"x_95coremit": {"sigma": 0.5e-7, "dist": "uniform"}}
+
+# dims
+DIMS = [50, 50]
