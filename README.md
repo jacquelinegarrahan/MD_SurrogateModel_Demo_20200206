@@ -30,11 +30,20 @@ $ python bin/cli.py serve start-server {protocol}
 In the other terminal:
 
 ```
+$ bokeh serve online_model/app/dashboard.py --args -p {protocol}
+```
+
+In an internet browser tab, navigate to:
+
+http://localhost:5006/dashboard
+
+The controls in this dashboard can also be opened in individual windows using the command:
+
+```
 $ bokeh serve online_model/app/controls.py online_model/app/striptool.py online_model/app/image_viewer.py --args -p {protocol}
 ```
 
-In each of the three internet browser tabs/windows, open each of the GUIs:
-
+And navigating to the following pages:
 http://localhost:5006/controls
 
 http://localhost:5006/striptool
