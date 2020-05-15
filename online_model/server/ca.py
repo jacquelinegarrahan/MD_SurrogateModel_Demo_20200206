@@ -21,10 +21,12 @@ class SimDriver(Driver):
         Dictionary mapping initial input process variables to values.
 
     output_pv_state: dict
-        Dictionary mapping initial output process variables to values (np.ndarray in the case of image x:y)
+        Dictionary mapping initial output process variables to values (np.ndarray in \\
+        the case of image x:y)
 
     noise_params:
-        Dictionary mapping noisy process variables to a dictionary containing their distribution and standard deviation.
+        Dictionary mapping noisy process variables to a dictionary containing their \\
+        distribution and standard deviation.
 
     """
 
@@ -46,7 +48,8 @@ class SimDriver(Driver):
             Dictionary that maps the output process variables to their inital values
 
         noise_params: dict
-            Dictionary mapping noisy process variables to a dictionary containing their distribution and standard deviation.
+            Dictionary mapping noisy process variables to a dictionary containing their \\
+            distribution and standard deviation.
         """
 
         super(SimDriver, self).__init__()
@@ -181,7 +184,8 @@ class SimDriver(Driver):
 
 class CAServer:
     """
-    Server object for channel access process variables that updates and reads process values in a single thread.
+    Server object for channel access process variables that updates and reads process \\
+    values in a single thread.
 
     Attributes
     ----------
@@ -189,7 +193,8 @@ class CAServer:
         OnlineSurrogateModel instance used for getting predictions
 
     pvdb: dict
-        Dictionary that maps the process variable string to type (str), prec (precision), value (float), units (str), range (List[float])
+        Dictionary that maps the process variable string to type (str), prec \\
+        (precision), value (float), units (str), range (List[float])
 
     input_pv_state: dict
         Dictionary that maps the input process variables to their current values
@@ -198,7 +203,8 @@ class CAServer:
         Dictionary that maps the output process variables to their current values
 
     server: pcaspy.driver.SimpleServer
-        Server class that interfaces between the channel access client and the driver. Forwards the read/write requests to the driver
+        Server class that interfaces between the channel access client and the driver. \\
+        Forwards the read/write requests to the driver
 
     driver: online_model.server.ca.SimDriver
         Class that reacts to process variable read/write requests
@@ -213,18 +219,24 @@ class CAServer:
         prefix: str = PREFIX,
     ) -> None:
         """
-        Create OnlineSurrogateModel instance and initialize output variables by running with the input process variable state, set up the proces variable database and input/output variable tracking, start the server, create the process variables, and start the driver.
+        Create OnlineSurrogateModel instance and initialize output variables by running \\
+        with the input process variable state, set up the proces variable database and \\
+        input/output variable tracking, start the server, create the process variables, \\
+        and start the driver.
 
         Parameters
         ----------
         in_pvdb: dict
-            Dictionary that maps the input process variable string to type (str), prec (precision), value (float), units (str), range (List[float])
+            Dictionary that maps the input process variable string to type (str), prec \\
+             (precision), value (float), units (str), range (List[float])
 
         out_pvdb: dict
-            Dictionary that maps the output process variable string to type (str), prec (precision), value (float), units (str), range (List[float])
+            Dictionary that maps the output process variable string to type (str), prec \\
+            (precision), value (float), units (str), range (List[float])
 
         noise_params: dict
-            Dictionary that maps noisy output process variables to their distribution and standard deviation
+            Dictionary that maps noisy output process variables to their distribution \\
+            and standard deviation
 
         """
 
