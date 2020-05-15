@@ -17,6 +17,16 @@ from p4p.client.thread import Context
 from online_model import PREFIX, ARRAY_PVS
 from online_model.app import PROTOCOL, CONTEXT
 
+DEFAULT_IMAGE_DATA = {
+    "image": [np.zeros((50, 50))],
+    "x": [50],
+    "y": [50],
+    "dw": [0.01],
+    "dh": [0.01],
+}
+
+DEFAULT_SCALAR_VALUE = 0
+
 
 class Monitor(ABC):
     """
@@ -98,27 +108,32 @@ class PVImageMonitor(Monitor):
         dict
             Dictionary mapping image components to values.
         """
-        if PROTOCOL == "ca":
-            # self.pv = PV(pv, auto_monitor=True)
-            data = caget(self.pvname)
-            nx = data[0]
-            ny = data[1]
-            ext = data[2:6]
-            dw = ext[1] - ext[0]
-            dh = ext[3] - ext[2]
-            image = data[6:]
-            image[np.where(image <= 0)] = 0  # Set negative to zero
-            image = image.reshape(int(nx), int(ny))
+        try:
+            if PROTOCOL == "ca":
+                # self.pv = PV(pv, auto_monitor=True)
+                data = caget(self.pvname)
+                nx = data[0]
+                ny = data[1]
+                ext = data[2:6]
+                dw = ext[1] - ext[0]
+                dh = ext[3] - ext[2]
+                image = data[6:]
+                image[np.where(image <= 0)] = 0  # Set negative to zero
+                image = image.reshape(int(nx), int(ny))
 
-        elif PROTOCOL == "pva":
-            # context returns np array with WRITEABLE=False
-            # copy to manipulate array below
-            pv = CONTEXT.get(self.pvname)
-            attrib = pv.attrib
-            dw = attrib["dw"]
-            dh = attrib["dh"]
-            nx, ny = pv.shape
-            image = copy.copy(pv)
+            elif PROTOCOL == "pva":
+                # context returns np array with WRITEABLE=False
+                # copy to manipulate array below
+                pv = CONTEXT.get(self.pvname)
+                attrib = pv.attrib
+                dw = attrib["dw"]
+                dh = attrib["dh"]
+                nx, ny = pv.shape
+                image = copy.copy(pv)
+
+        except TimeoutError:
+            print(f"No process variable found for {self.pvname}")
+            return DEFAULT_IMAGE_DATA
 
         return {"image": [image], "x": [nx], "y": [ny], "dw": [dw], "dh": [dh]}
 
@@ -173,7 +188,7 @@ class ImageController:
         image_data = self.pv_monitors[self.current_pv].poll()
         self.source = ColumnDataSource(image_data)
 
-    def build_plot(self, palette: tuple) -> Nonoe:
+    def build_plot(self, palette: tuple) -> None:
         """
         Creates the plot object.
 
@@ -272,11 +287,15 @@ class PVScalarMonitor(Monitor):
         """
         t = time.time()
 
-        if PROTOCOL == "ca":
-            v = caget(self.pvname)
+        try:
+            if PROTOCOL == "ca":
+                v = caget(self.pvname)
 
-        elif PROTOCOL == "pva":
-            v = CONTEXT.get(self.pvname)
+            elif PROTOCOL == "pva":
+                v = CONTEXT.get(self.pvname)
+        except TimeoutError:
+            print(f"No process variable found for {self.pvname}")
+            v = DEFAULT_SCALAR_VALUE
 
         self.time = np.append(self.time, t)
         self.data = np.append(self.data, v)
