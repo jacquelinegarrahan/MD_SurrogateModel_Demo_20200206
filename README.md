@@ -22,7 +22,7 @@ Tensorflow is installed using CPU only.
 
 Open two terminal windows and three internet browser tabs/windows. In each terminal, activate the online-surrogate-model conda environment.
 
-In the first terminal, type (replacing) `protocol` with `pva` for PVAccess and `ca` for Channel Access:
+In the first terminal, type (replacing `protocol` with `pva` for PVAccess and `ca` for Channel Access):
 
 ```
 $ python bin/cli.py serve start-server {protocol}
