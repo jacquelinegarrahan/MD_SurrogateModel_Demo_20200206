@@ -17,24 +17,24 @@ from bokeh import palettes, colors
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB
-from online_model.app import PlotController
+from online_model.app import ImageController
 
 pal = palettes.Viridis[256]
 white = colors.named.white
 
 # set up plot controller
-plot_controller = PlotController(SIM_PVDB)
-plot_controller.build_plot(pal)
+image_controller = ImageController(SIM_PVDB)
+image_controller.build_plot(pal)
 
 # set current_pv globally
-current_pv = plot_controller.current_pv
+current_pv = image_controller.current_pv
 
 # set up selection toggle
 select = Select(
-    title="Image PV", value=current_pv, options=list(plot_controller.pvimages.keys())
+    title="Image PV", value=current_pv, options=list(image_controller.pvimages.keys())
 )
 
-
+# Set up selection callback
 def on_selection(attrname, old, new):
     """
     Callback function for dropdown selection that updates the global current variable.
@@ -45,5 +45,15 @@ def on_selection(attrname, old, new):
 
 select.on_change("value", on_selection)
 
-curdoc().add_root(column(row(select), row(plot_controller.p), width=300))
-curdoc().add_periodic_callback(partial(plot_controller.update, current_pv), 250)
+# Set up image update callback
+def image_callback():
+    """
+    Calls plot controller update with the current global process variable
+    """
+    global current_pv
+    image_controller.update(current_pv)
+
+
+curdoc().title = "Online Surrogate Model Image Viewer"
+curdoc().add_root(column(row(select), row(image_controller.p), width=300))
+curdoc().add_periodic_callback(image_callback, 250)

@@ -17,28 +17,42 @@ from bokeh.models.widgets import Select
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
-from online_model import PREFIX, SIM_PVDB, ARRAY_PVS
+from online_model import SIM_PVDB
 from online_model.app import PlotController
 
-
+# Set up the controller for the plot
 plot_controller = PlotController(SIM_PVDB)
 plot_controller.build_plot()
 current_pv = plot_controller.current_pv
 
-# set up selection
-def pv_select_callback(attr, old, new):
-    global current_pv
-    current_pv = new
-
-
+# Set up select option
 select = Select(
     title="PV to Plot:",
     value=current_pv,
     options=list(plot_controller.pvmonitors.keys()),
 )
+
+# Set up selection callback
+def pv_select_callback(attr, old, new):
+    """
+    Update global current process variable.
+    """
+    global current_pv
+    current_pv = new
+
+
 select.on_change("value", pv_select_callback)
 
-scol = column(row(select), row(plot_controller.p), width=350)
-curdoc().add_root(scol)
-curdoc().add_periodic_callback(partial(plot_controller.update, current_pv), 250)
+# Set up periodic plot callback
+def plot_callback():
+    """
+    Calls plot controller update with the current global process variable
+    """
+    global current_pv
+    plot_controller.update(current_pv)
+
+
+# Set up page
 curdoc().title = "Online Surrogate Model Strip Tool"
+curdoc().add_root(column(row(select), row(plot_controller.p), width=300))
+curdoc().add_periodic_callback(plot_callback, 250)
