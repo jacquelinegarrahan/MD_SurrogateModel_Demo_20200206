@@ -90,7 +90,7 @@ class InputHandler:
 
                 # get dw and dh from model output
                 array_data.attrib = {
-                    "dw": value[3] - value[1],
+                    "dw": value[3] - value[2],
                     "dh": value[5] - value[4],
                 }
 
@@ -184,7 +184,7 @@ class PVAServer:
 
                 # get dw and dh from model output
                 array_data.attrib = {
-                    "dw": starting_output[out_pv][3] - starting_output[out_pv][1],
+                    "dw": starting_output[out_pv][3] - starting_output[out_pv][2],
                     "dh": starting_output[out_pv][5] - starting_output[out_pv][4],
                 }
 
