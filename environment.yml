@@ -10,5 +10,5 @@ dependencies:
   - bokeh
   - click
   - pip:
-    - tensorflow==1.15.0
+    - tensorflow==2.1.0
     - keras==2.2.4
