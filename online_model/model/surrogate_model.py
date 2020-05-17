@@ -5,6 +5,12 @@ import copy
 from typing import Dict, Tuple, Mapping, Union
 from abc import ABC, abstractmethod
 
+
+import random
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import datasets, layers, models
+
 import tensorflow as tf
 from keras.models import model_from_json
 from sklearn.preprocessing import MinMaxScaler
@@ -378,13 +384,6 @@ def load_model_info(model_file: str) -> ModelInfo:
         model_info = dict(h5.attrs)
 
     return model_info
-
-
-import random
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import datasets, layers, models
 
 
 class MySurrogateModel:
