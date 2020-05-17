@@ -130,6 +130,7 @@ class PVImageMonitor(Monitor):
                 dh = attrib["dh"]
                 nx, ny = pv.shape
                 image = copy.copy(pv)
+                image[np.where(image <= 0)] = 0
 
         except TimeoutError:
             print(f"No process variable found for {self.pvname}")
