@@ -1,6 +1,7 @@
 import numpy as np
 import sys, os
 import time
+import copy
 from typing import Dict, Tuple, Mapping, Union
 from abc import ABC, abstractmethod
 
@@ -11,8 +12,11 @@ import h5py
 import random
 import pickle
 
-from online_model import MODEL_FILE  # YAG_MODEL_FILE, SCALAR_MODEL_FILE
-from online_model import DEFAULT_LASER_IMAGE
+from online_model import (
+    MODEL_FILE,
+    DEFAULT_LASER_IMAGE,
+    REDUNDANT_INPUT_OUTPUT,
+)  # YAG_MODEL_FILE, SCALAR_MODEL_FILE
 
 
 # TODO: What are bins? What is ext?
@@ -421,6 +425,19 @@ Example Usage:
         self.model_value_max = attrs["upper"]
         self.model_value_min = attrs["lower"]
 
+        # TEMPORARY PATCH FOR INPUT/OUTPUT REDUNDANT VARS
+        rebuilt_order = copy.copy(self.input_ordering)
+        for i, input_val in enumerate(self.input_ordering):
+            if input_val in REDUNDANT_INPUT_OUTPUT:
+                rebuilt_order[i] = f"in_{input_val}"
+        self.input_ordering = rebuilt_order
+
+        rebuilt_order = copy.copy(self.output_ordering)
+        for i, output_val in enumerate(self.output_ordering):
+            if output_val in REDUNDANT_INPUT_OUTPUT:
+                rebuilt_order[i] = f"out_{output_val}"
+        self.output_ordering = rebuilt_order
+
         if self.type == "image":
             self.image_scale = self.output_scales[-1]
             self.image_offset = self.output_offsets[-1]
@@ -507,7 +524,17 @@ Example Usage:
         )
         predicted_output["extents"] = predicted_extents
         predicted_output["image"] = predicted_image
-        return predicted_output
+
+        # TEMPORARY PATCH FOR OUTPUT ORDERING
+        rebuilt_output = {}
+        for item in predicted_output:
+            if item in REDUNDANT_INPUT_OUTPUT:
+                rebuilt_output[f"out_{item}"] = predicted_output[item]
+
+            else:
+                rebuilt_output[item] = predicted_output[item]
+
+        return rebuilt_output
 
     def use_stock_input_image(self):
         data = np.load(self.stock_image_input)

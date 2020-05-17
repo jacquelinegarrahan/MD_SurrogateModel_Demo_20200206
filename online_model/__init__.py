@@ -33,17 +33,32 @@ with h5py.File(MODEL_FILE, "r") as h5:
 # Start with the nice example from Lipi
 
 DEFAULT_LASER_IMAGE = np.load(STOCK_LASER_IMAGE)
-DEFAULT_INPUTS_SCALARS = [ 3.47986980e-01,  4.02751972e-02, -7.99101687e+00,  1.41576322e+02,
- -3.53964583e-04,  3.44330666e-04, -3.47874295e-04,  3.45778376e-04]
+DEFAULT_INPUTS_SCALARS = [
+    3.47986980e-01,
+    4.02751972e-02,
+    -7.99101687e00,
+    1.41576322e02,
+    -3.53964583e-04,
+    3.44330666e-04,
+    -3.47874295e-04,
+    3.45778376e-04,
+]
 
 DEFAULT_INPUTS = dict(zip(MODEL_INFO["input_ordering"], DEFAULT_INPUTS_SCALARS))
 DEFAULT_INPUTS["image"] = DEFAULT_LASER_IMAGE
 
 
+# TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
+REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
+
 # Set up pvdbs
 CMD_PVDB = {}
 for ii, input_name in enumerate(MODEL_INFO["input_names"]):
-    CMD_PVDB[input_name] = {
+    label = input_name
+    if input_name in REDUNDANT_INPUT_OUTPUT:
+        label = f"in_{input_name}"
+
+    CMD_PVDB[label] = {
         "type": "float",
         "prec": 8,
         "value": DEFAULT_INPUTS[input_name],
@@ -53,12 +68,17 @@ for ii, input_name in enumerate(MODEL_INFO["input_names"]):
 
 SIM_PVDB = {}
 for ii, output_name in enumerate(MODEL_INFO["output_names"]):
-    SIM_PVDB[output_name] = {
+    label = output_name
+    if output_name in REDUNDANT_INPUT_OUTPUT:
+        label = f"out_{output_name}"
+
+    SIM_PVDB[label] = {
         "type": "float",
         "prec": 8,
         # "value": default_output[output_name],
         "units": fix_units(MODEL_INFO["output_units"][ii]),
     }
+
 
 # sim_pvdb['z:pz']={'type': 'float', 'prec': 8, 'count':len(default_output['z:pz']),'units':'mm:delta','value':list(default_output['z:pz'])}
 SIM_PVDB["x:y"] = {
