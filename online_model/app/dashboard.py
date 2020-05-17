@@ -60,7 +60,13 @@ def image_callback():
 
 
 # build sliders for the command process variable database
-sliders = build_sliders(CMD_PVDB)
+# TEMPORARILY EXCLUDE THE EXTENTS
+sliders_to_render = {}
+for var, value in CMD_PVDB.items():
+    if "in_" not in var:
+        sliders_to_render[var] = value
+
+sliders = build_sliders(sliders_to_render)
 slider_col = column(sliders, width=350)
 
 # set up striptool
