@@ -20,8 +20,10 @@ from online_model import PREFIX, SIM_PVDB, CMD_PVDB
 from online_model.app.widgets.sliders import build_sliders
 from online_model.app.widgets.controllers import ImageController, PlotController
 
-pal = palettes.Viridis[256]
-white = colors.named.white
+# Create custom palette with low values set to white
+pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
+pal = ["#FFFFFF"] * 12 + pal
+pal = tuple(pal)
 
 # set up plot controller
 image_controller = ImageController(SIM_PVDB)
