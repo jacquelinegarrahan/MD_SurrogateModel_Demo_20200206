@@ -19,8 +19,11 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 from online_model import PREFIX, SIM_PVDB
 from online_model.app.widgets.controllers import ImageController
 
-pal = palettes.Viridis[256]
+# Create custom palette with low values set to white
 white = colors.named.white
+pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
+pal = ["#FFFFFF"] * 12 + pal
+pal = tuple(pal)
 
 # set up plot controller
 image_controller = ImageController(SIM_PVDB)
