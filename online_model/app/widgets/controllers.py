@@ -136,7 +136,13 @@ class PVImageMonitor(Monitor):
             print(f"No process variable found for {self.pvname}")
             return DEFAULT_IMAGE_DATA
 
-        return {"image": [image], "x": [nx], "y": [ny], "dw": [dw], "dh": [dh]}
+        return {
+            "image": [image],
+            "x": [-dw / 2],
+            "y": [-dh / 2],
+            "dw": [dw],
+            "dh": [dh],
+        }
 
     def variables(self) -> List[str]:
         """
