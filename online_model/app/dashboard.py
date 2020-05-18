@@ -6,10 +6,10 @@ from functools import partial
 
 from epics import caget, PV
 from p4p.client.thread import Context
-
+from bokeh.models.callbacks import CustomJS
 from bokeh.models.widgets import Select
 from bokeh.io import curdoc
-from bokeh.layouts import column, row
+from bokeh.layouts import column, row, Spacer
 
 from bokeh import palettes, colors
 
@@ -18,7 +18,11 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
 from online_model import PREFIX, SIM_PVDB, CMD_PVDB
 from online_model.app.widgets.sliders import build_sliders
-from online_model.app.widgets.controllers import ImageController, PlotController
+from online_model.app.widgets.controllers import (
+    ImageController,
+    PlotController,
+    TableController,
+)
 
 # Create custom palette with low values set to white
 pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
@@ -87,13 +91,18 @@ striptool_select = Select(
 )
 striptool_select.on_change("value", striptool_select_callback)
 
-# Set up plot update callback
-def plot_callback():
+# add table
+table_controller = TableController(SIM_PVDB)
+
+# Set up plot and table update callback
+def data_callback():
     """
     Calls plot controller update with the current global process variable
     """
     global current_striptool_pv
     plot_controller.update(current_striptool_pv)
+
+    table_controller.update()
 
 
 # Set up the document
@@ -101,7 +110,7 @@ curdoc().title = "Online Surrogate Model Virtual Machine"
 
 curdoc().add_root(
     column(
-        row(slider_col),  # add sliders
+        row(slider_col, Spacer(width=50), table_controller.table),  # add sliders
         row(
             column(image_select, image_controller.p),  # add image controls
             column(striptool_select, plot_controller.p),  # add plot controls
@@ -109,5 +118,6 @@ curdoc().add_root(
         width=300,
     )
 )
+
 curdoc().add_periodic_callback(image_callback, 250)
-curdoc().add_periodic_callback(plot_callback, 250)
+curdoc().add_periodic_callback(data_callback, 250)
