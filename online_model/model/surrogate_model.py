@@ -32,7 +32,17 @@ from online_model import (
 ModelInfo = Mapping[str, Union[bytes, np.ndarray, str, np.int64]]
 
 
-class ReconstructedScaler:
+class Scaler(ABC):
+    @abstractmethod
+    def transform(self):
+        pass
+
+    @abstractmethod
+    def inverse_transform(self):
+        pass
+
+
+class ReconstructedScaler(Scaler):
     """
     Object for performing appropriate scaling on inputs and outputs.
 
