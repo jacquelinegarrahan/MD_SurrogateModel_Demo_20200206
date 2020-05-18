@@ -6,6 +6,8 @@ dependencies:
   - scikit-learn=0.21.3
   - conda-forge::pyepics
   - conda-forge::p4p=3.4.2
+  - conda-forge::jupyterlab
+  - conda-forge::notebook
   - h5py
   - bokeh
   - click
