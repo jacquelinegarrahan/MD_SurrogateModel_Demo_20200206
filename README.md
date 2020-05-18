@@ -64,6 +64,9 @@ The Channel Access process variables can be monitored using the command:
 $ caget {pvname}
 ```
 
+## Run Jupyter Notebook
+python -m ipykernel install --user --name=online-surrogate-model
+
 
 ## Possible issues
 You may receive many Tensorflow warnings, due to depreciation - these can be ignored and will be fixed in the future.
