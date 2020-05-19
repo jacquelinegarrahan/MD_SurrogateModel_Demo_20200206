@@ -39,14 +39,16 @@ class MyScaler(Scaler):
     # MUST OVERWRITE
     def transform(self, values, scale_type):
         if scale_type == "image":
-            data_scaled = values / self.image_input_scales
+            data_scaled = np.array([values / self.image_input_scales])
 
         elif scale_type == "scalar":
             data_scaled = self.model_value_min + (
                 (values - self.input_offsets[0 : self.n_scalar_vars])
                 * (self.model_value_max - self.model_value_min)
-                / self.input_scales
+                / self.input_scales[0 : self.n_scalar_vars]
             )
+
+            data_scaled = np.array([data_scaled])
 
         return data_scaled
 
@@ -54,20 +56,18 @@ class MyScaler(Scaler):
     def inverse_transform(self, values, scale_type):
         if scale_type == "image":
             data_unscaled = values * self.image_output_scales
+            data_unscaled = data_unscaled.reshape(
+                (1, int(self.image_shape[0] * self.image_shape[1]))
+            )
 
         elif scale_type == "scalar":
-            # reshape values
-
-            values = values.reshape(values.shape[0], self.image_shape)
-
             data_unscaled = (
-                (values - self.min_value)
-                * (self.input_scales[: self.n_scalar_vars])
+                (values - self.model_value_min)
+                * (self.output_scales)
                 / (self.model_value_max - self.model_value_min)
-            ) + self.input_offsets[: self.n_scalar_vars]
+            ) + self.output_offsets
 
         # data_unscaled = data_unscaled.reshape(self.image_shape)
-
         return data_unscaled
 
 
@@ -104,7 +104,8 @@ class MySurrogateModel(SurrogateModel):
 
         # now that this is scaled, we access the model attribute loaded by the
         # SurrogateModel base class
-        predicted_output = self.model.predict([image_input, scalar_inputs])
+        with self.thread_graph.as_default():
+            predicted_output = self.model.predict([image_input, scalar_inputs])
 
         # process the model output
         image_output = np.array(predicted_output[0])
@@ -124,16 +125,16 @@ class MySurrogateModel(SurrogateModel):
 
         # convert from arrays
         for scalar in self.output_ordering:
-            output[scalar] = predicted_output[scalar][0]
+            formatted_output[scalar] = formatted_output[scalar][0]
 
-        image_values = np.zeros((2 + len(image_extents) + image_output.shape[1],))
+        image_values = np.zeros((2 + len(extent_output[0]) + image_output.shape[1],))
 
-        image_values[0] = self.image_shape[0]
-        image_values[1] = self.image_shape[1]
+        image_values[0] = self.scaler.image_shape[0]
+        image_values[1] = self.scaler.image_shape[1]
         image_values[2:6] = extent_output
-        image_values[6:] = image_array
+        image_values[6:] = image_output
 
         # format image data for viewing
-        output["x:y"] = image_values
+        formatted_output["x:y"] = image_values
 
-        return apply_temporary_output_patch(image_output)
+        return apply_temporary_output_patch(formatted_output)

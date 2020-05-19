@@ -153,17 +153,17 @@ class SurrogateModel(ABC):
 
         """
         # Open the File
-        self.input_ordering = model_info["input_ordering"]
+        # self.input_ordering = model_info["input_ordering"]
 
         # load model in thread safe manner
         self.thread_graph = tf.Graph()
+        #  self.session = tf.Session(self.thread_graph)
+        #  with self.session:
         with self.thread_graph.as_default():
-            self.thread_session = tf.compat.v1.Session()
-            with self.thread_session.as_default():
-                self.model = tf.keras.models.model_from_json(
-                    model_info["JSON"].decode("utf-8")
-                )
-                self.model.load_weights(self.model_file)
+            self.model = tf.keras.models.model_from_json(
+                model_info["JSON"].decode("utf-8")
+            )
+            self.model.load_weights(self.model_file)
 
     @abstractmethod
     def predict(self):
@@ -318,8 +318,7 @@ class ImageSurrogateModel(SurrogateModel):
 
         # call thread-safe predictions
         with self.thread_graph.as_default():
-            with self.thread_session.as_default():
-                predicted_outputs = self.model.predict(inputs_scaled)
+            predicted_outputs = self.model.predict(inputs_scaled)
 
         predicted_outputs_limits = self.scaler.inverse_transform(
             predicted_outputs[:, : self.ndim]
@@ -463,7 +462,6 @@ def apply_temporary_ordering_patch(ordering, prefix):
         if val in REDUNDANT_INPUT_OUTPUT:
             rebuilt_order[i] = f"{prefix}_{val}"
 
-    breakpoint()
     return rebuilt_order
 
 
