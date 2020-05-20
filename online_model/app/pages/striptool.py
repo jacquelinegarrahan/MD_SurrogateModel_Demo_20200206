@@ -15,21 +15,26 @@ from bokeh.layouts import column, row
 from bokeh.models.widgets import Select
 
 # fix for bokeh path error, maybe theres a better way to do this
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
+from online_model.app.controllers import Controller
+from online_model.app.widgets.plots import Striptool
+from online_model.app import get_protocol
 from online_model import SIM_PVDB
-from online_model.app.widgets.controllers import PlotController
+
+PROTOCOL = get_protocol()
+
+# create controller
+controller = Controller(PROTOCOL)
 
 # Set up the controller for the plot
-plot_controller = PlotController(SIM_PVDB)
-plot_controller.build_plot()
-current_pv = plot_controller.current_pv
+striptool = Striptool(SIM_PVDB, controller)
+striptool.build_plot()
+current_pv = striptool.current_pv
 
 # Set up select option
 select = Select(
-    title="PV to Plot:",
-    value=current_pv,
-    options=list(plot_controller.pv_monitors.keys()),
+    title="PV to Plot:", value=current_pv, options=list(striptool.pv_monitors.keys())
 )
 
 # Set up selection callback
@@ -49,10 +54,10 @@ def plot_callback():
     Calls plot controller update with the current global process variable
     """
     global current_pv
-    plot_controller.update(current_pv)
+    striptool.update(current_pv)
 
 
 # Set up page
 curdoc().title = "Online Surrogate Model Strip Tool"
-curdoc().add_root(column(row(select), row(plot_controller.p), width=300))
+curdoc().add_root(column(row(select), row(striptool.p), width=300))
 curdoc().add_periodic_callback(plot_callback, 250)

@@ -13,10 +13,10 @@ class Controller:
 
     def get(self, pvname):
         if self.protocol == "ca":
-            return caget(self.pvname)
+            return caget(pvname)
 
         elif self.protocol == "pva":
-            return self.context.get(self.pvname)
+            return self.context.get(pvname)
 
     def put(self, pvname, value):
         if self.protocol == "ca":

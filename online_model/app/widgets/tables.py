@@ -53,8 +53,8 @@ class ValueTable:
 
         for pv in sim_pvdb:
             if pv not in array_pvs:
-                self.pv_monitors[opv] = PVScalar(
-                    f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller
+                self.pv_monitors[pv] = PVScalar(
+                    f"{PREFIX}:{pv}", sim_pvdb[pv]["units"], controller
                 )
                 v = self.pv_monitors[pv].poll()
 
@@ -87,7 +87,7 @@ class ValueTable:
         """
         output_values = []
         for pv in self.pv_monitors:
-            _, ys = self.pv_monitors[pv].poll()
-            output_values.append(ys[-1])
+            v = self.pv_monitors[pv].poll()
+            output_values.append(v)
 
         self.source.data = dict(x=self.names, y=output_values)

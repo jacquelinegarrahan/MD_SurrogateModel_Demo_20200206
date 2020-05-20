@@ -14,7 +14,7 @@ from bokeh.models import ColumnDataSource, DataTable, TableColumn, StringFormatt
 from epics import caget, caput
 from p4p.client.thread import Context
 
-from online_model.app.widgets.controllers import Controller
+from online_model.app.controllers import Controller
 from online_model import PREFIX, ARRAY_PVS
 
 
@@ -66,7 +66,7 @@ class PVImage:
         """
         self.units = units.split(":")
         self.pvname = pvname
-        self.controller = Controller
+        self.controller = controller
         self.model_class = model_class
 
     def poll(self) -> Dict[str, list]:
@@ -87,7 +87,7 @@ class PVImage:
             return DEFAULT_IMAGE_DATA
 
         # now prepare the value using method defined by the model
-        return self.model_class.prepare_image_from_pv(value)
+        return self.model_class.prepare_image_from_pv(value, self.controller.protocol)
 
     def variables(self) -> List[str]:
         """
@@ -132,6 +132,7 @@ class PVTimeSeries:
         self.time = np.array([])
         self.data = np.array([])
         self.units = units.split(":")
+        self.controller = controller
 
     def poll(self) -> Tuple[np.ndarray]:
         """
@@ -175,8 +176,9 @@ class PVScalar:
             Controller object for getting pv values
 
         """
-        self.tstart = time.time()
         self.units = units.split(":")
+        self.pvname = pvname
+        self.controller = controller
 
     def poll(self) -> Tuple[np.ndarray]:
         """

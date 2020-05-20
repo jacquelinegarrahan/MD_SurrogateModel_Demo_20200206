@@ -14,33 +14,42 @@ from bokeh.layouts import column, row, Spacer
 from bokeh import palettes, colors
 
 # fix for bokeh path error, maybe theres a better way to do this
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
 from online_model import PREFIX, SIM_PVDB, CMD_PVDB
+from online_model.app.controllers import Controller
 from online_model.app.widgets.sliders import build_sliders
-from online_model.app.widgets.controllers import (
-    ImageController,
-    PlotController,
-    TableController,
-)
+from online_model.app.widgets.plots import ImagePlot
+from online_model.app.widgets.plots import Striptool
+from online_model.app.widgets.tables import ValueTable
+from online_model.app import get_protocol
+
+# need surrogate model image processing methods
+from online_model.model.MySurrogateModel import MySurrogateModel
+
+# get protocol
+PROTOCOL = get_protocol()
+
+# create controller
+controller = Controller(PROTOCOL)
 
 # Create custom palette with low values set to white
 pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
 pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
-# set up plot controller
-image_controller = ImageController(SIM_PVDB)
-image_controller.build_plot(pal)
+# set up plot
+image_plot = ImagePlot(SIM_PVDB, controller, MySurrogateModel)
+image_plot.build_plot(pal)
 
 # set current_pv globally
-current_image_pv = image_controller.current_pv
+current_image_pv = image_plot.current_pv
 
 # set up image toggle
 image_select = Select(
     title="Image PV",
     value=current_image_pv,
-    options=list(image_controller.pv_monitors.keys()),
+    options=list(image_plot.pv_monitors.keys()),
 )
 
 
@@ -60,7 +69,7 @@ def image_callback():
     Calls plot controller update with the current global process variable
     """
     global current_image_pv
-    image_controller.update(current_image_pv)
+    image_plot.update(current_image_pv)
 
 
 # build sliders for the command process variable database
@@ -70,13 +79,15 @@ for var, value in CMD_PVDB.items():
     if "in_" not in var:
         sliders_to_render[var] = value
 
-sliders = build_sliders(sliders_to_render)
+sliders = build_sliders(CMD_PVDB, controller)
 slider_col = column(sliders, width=350)
 
-# set up striptool
-plot_controller = PlotController(SIM_PVDB)
-plot_controller.build_plot()
-current_striptool_pv = plot_controller.current_pv
+# Set up the controller for the plot
+striptool = Striptool(SIM_PVDB, controller)
+striptool.build_plot()
+
+# set up global pv
+current_striptool_pv = striptool.current_pv
 
 # set up selection
 def striptool_select_callback(attr, old, new):
@@ -87,22 +98,23 @@ def striptool_select_callback(attr, old, new):
 striptool_select = Select(
     title="PV to Plot:",
     value=current_striptool_pv,
-    options=list(plot_controller.pv_monitors.keys()),
+    options=list(striptool.pv_monitors.keys()),
 )
 striptool_select.on_change("value", striptool_select_callback)
 
 # add table
-table_controller = TableController(SIM_PVDB)
+value_table = ValueTable(SIM_PVDB, controller)
 
 # Set up plot and table update callback
 def data_callback():
     """
     Calls plot controller update with the current global process variable
+    and updates the value table.
     """
     global current_striptool_pv
-    plot_controller.update(current_striptool_pv)
 
-    table_controller.update()
+    striptool.update(current_striptool_pv)
+    value_table.update()
 
 
 # Set up the document
@@ -110,10 +122,10 @@ curdoc().title = "Online Surrogate Model Virtual Machine"
 
 curdoc().add_root(
     column(
-        row(slider_col, Spacer(width=50), table_controller.table),  # add sliders
+        row(slider_col, Spacer(width=50), value_table.table),  # add sliders
         row(
-            column(image_select, image_controller.p),  # add image controls
-            column(striptool_select, plot_controller.p),  # add plot controls
+            column(image_select, image_plot.p),  # add image controls
+            column(striptool_select, striptool.p),  # add plot controls
         ),
         width=300,
     )

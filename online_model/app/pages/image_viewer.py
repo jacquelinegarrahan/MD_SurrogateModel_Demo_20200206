@@ -14,10 +14,21 @@ from bokeh.layouts import column, row
 from bokeh import palettes, colors
 
 # fix for bokeh path error, maybe theres a better way to do this
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
 from online_model import PREFIX, SIM_PVDB
-from online_model.app.widgets.controllers import ImageController
+from online_model.app.controllers import Controller
+from online_model.app.widgets.plots import ImagePlot
+from online_model.app import get_protocol
+
+# need surrogate model image processing methods
+from online_model.model.MySurrogateModel import MySurrogateModel
+
+# get protocol
+PROTOCOL = get_protocol()
+
+# create controller
+controller = Controller(PROTOCOL)
 
 # Create custom palette with low values set to white
 white = colors.named.white
@@ -25,18 +36,16 @@ pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
 pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
-# set up plot controller
-image_controller = ImageController(SIM_PVDB)
-image_controller.build_plot(pal)
+# set up plot
+image_plot = ImagePlot(SIM_PVDB, controller, MySurrogateModel)
+image_plot.build_plot(pal)
 
 # set current_pv globally
-current_pv = image_controller.current_pv
+current_pv = image_plot.current_pv
 
 # set up selection toggle
 select = Select(
-    title="Image PV",
-    value=current_pv,
-    options=list(image_controller.pv_monitors.keys()),
+    title="Image PV", value=current_pv, options=list(image_plot.pv_monitors.keys())
 )
 
 # Set up selection callback
@@ -56,9 +65,9 @@ def image_callback():
     Calls plot controller update with the current global process variable
     """
     global current_pv
-    image_controller.update(current_pv)
+    image_plot.update(current_pv)
 
 
 curdoc().title = "Online Surrogate Model Image Viewer"
-curdoc().add_root(column(row(select), row(image_controller.p), width=300))
+curdoc().add_root(column(row(select), row(image_plot.p), width=300))
 curdoc().add_periodic_callback(image_callback, 250)
