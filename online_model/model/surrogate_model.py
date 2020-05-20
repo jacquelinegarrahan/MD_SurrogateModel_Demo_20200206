@@ -155,16 +155,6 @@ class SurrogateModel(ABC):
         # Open the File
         # self.input_ordering = model_info["input_ordering"]
 
-        # load model in thread safe manner
-        self.thread_graph = tf.Graph()
-        #  self.session = tf.Session(self.thread_graph)
-        #  with self.session:
-        with self.thread_graph.as_default():
-            self.model = tf.keras.models.model_from_json(
-                model_info["JSON"].decode("utf-8")
-            )
-            self.model.load_weights(self.model_file)
-
     @abstractmethod
     def predict(self):
         """
