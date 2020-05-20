@@ -8,8 +8,6 @@ os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = "1000000"
 
 from online_model.util import fix_units
 
-# SCALAR_MODEL_FILE = "online_model/files/Scalar_NN_SurrogateModel.h5"
-# YAG_MODEL_FILE = "online_model/files/YAG_NN_SurrogateModel.h5"
 MODEL_FILE = "online_model/files/CNN_051620_SurrogateModel.h5"
 STOCK_LASER_IMAGE = "online_model/files/example_input_image.npy"
 STOCK_INPUT_SCALARS = "online_model/files/example_input_scalars.npy"
@@ -17,20 +15,10 @@ STOCK_INPUT_SCALARS = "online_model/files/example_input_scalars.npy"
 # pva prefix
 PREFIX = "smvm"
 
-# load info for both models
-# SCALAR_MODEL_INFO = {}
-# with h5py.File(SCALAR_MODEL_FILE, "r") as h5:
-#     SCALAR_MODEL_INFO = dict(h5.attrs)
-
-# YAG_MODEL_INFO = {}
-# with h5py.File(YAG_MODEL_FILE, "r") as h5:
-#     YAG_MODEL_INFO = dict(h5.attrs)
-
+# Build model info
 MODEL_INFO = {}
 with h5py.File(MODEL_FILE, "r") as h5:
     MODEL_INFO = dict(h5.attrs)
-
-# Start with the nice example from Lipi
 
 DEFAULT_LASER_IMAGE = np.load(STOCK_LASER_IMAGE)
 DEFAULT_INPUTS_SCALARS = [
@@ -50,6 +38,7 @@ DEFAULT_INPUTS["image"] = DEFAULT_LASER_IMAGE
 
 # TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
 REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
+
 
 # Set up pvdbs
 CMD_PVDB = {}
@@ -96,3 +85,6 @@ ARRAY_PVS = ["x:y"]
 
 # dims
 DIMS = [50, 50]
+
+
+MODEL_KWARGS = {"model_file": MODEL_FILE, "stock_image_input": DEFAULT_LASER_IMAGE}
