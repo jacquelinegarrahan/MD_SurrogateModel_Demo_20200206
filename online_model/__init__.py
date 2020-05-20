@@ -39,6 +39,8 @@ DEFAULT_INPUTS["image"] = DEFAULT_LASER_IMAGE
 # TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
 REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
 
+# sliders to exclude
+EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
 
 # Set up pvdbs
 CMD_PVDB = {}

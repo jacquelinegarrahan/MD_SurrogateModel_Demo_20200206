@@ -13,7 +13,7 @@ from bokeh.models import ColumnDataSource
 from epics import caget, caput
 from p4p.client.thread import Context
 
-from online_model import PREFIX, ARRAY_PVS
+from online_model import PREFIX, ARRAY_PVS, EXCLUDE_SLIDERS
 from online_model.app.controllers import Controller
 
 
@@ -127,20 +127,21 @@ def build_sliders(cmd_pvdb: dict, controller: Controller) -> List[Slider]:
     sliders = []
 
     for ii, pv in enumerate(cmd_pvdb):
-        title = pv + " (" + cmd_pvdb[pv]["units"] + ")"
-        pvname = PREFIX + ":" + pv
-        step = (cmd_pvdb[pv]["range"][1] - cmd_pvdb[pv]["range"][0]) / 100.0
-        scale = 1
+        if pv not in EXCLUDE_SLIDERS:  # temporarily exclude the extent sliders
+            title = pv + " (" + cmd_pvdb[pv]["units"] + ")"
+            pvname = PREFIX + ":" + pv
+            step = (cmd_pvdb[pv]["range"][1] - cmd_pvdb[pv]["range"][0]) / 100.0
+            scale = 1
 
-        slider = build_slider(
-            title,
-            pvname,
-            scale,
-            cmd_pvdb[pv]["range"][0],
-            cmd_pvdb[pv]["range"][1],
-            step,
-            controller,
-        )
-        sliders.append(slider)
+            slider = build_slider(
+                title,
+                pvname,
+                scale,
+                cmd_pvdb[pv]["range"][0],
+                cmd_pvdb[pv]["range"][1],
+                step,
+                controller,
+            )
+            sliders.append(slider)
 
     return sliders
