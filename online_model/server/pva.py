@@ -13,12 +13,6 @@ from online_model.model.surrogate_model import OnlineSurrogateModel
 from online_model.model.MySurrogateModel import MySurrogateModel
 from online_model import PREFIX, MODEL_INFO, MODEL_FILE, DEFAULT_LASER_IMAGE
 
-# global mapping of process variable string to SharedPV instance
-providers = {}
-
-# global mapping of input process variable string to value
-input_pvs = {}
-
 
 class ModelLoader(threading.local):
     """
@@ -141,9 +135,11 @@ class PVAServer:
             Dictionary that maps the output process variable string to type (str), \\
             prec (precision), value (float), units (str), range (List[float])
         """
-
+        # need these to be global to access from threads
         global providers
         global input_pvs
+        providers = {}
+        input_pvs = {}
 
         # these aren't currently used; but, probably not a bad idea to have around
         # for introspection
