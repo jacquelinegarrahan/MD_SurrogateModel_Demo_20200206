@@ -25,20 +25,15 @@ class SimDriver(Driver):
         Dictionary mapping initial output process variables to values (np.ndarray in \\
         the case of image x:y)
 
-    noise_params:
-        Dictionary mapping noisy process variables to a dictionary containing their \\
-        distribution and standard deviation.
-
     """
 
     def __init__(
         self,
         input_pv_state: Dict[str, float],
         output_pv_state: Mapping[str, Union[float, np.ndarray]],
-        noise_params: Dict[str, dict] = {},
     ) -> None:
         """
-        Initialize the driver. Store input state, output state, and noise parameters.
+        Initialize the driver. Store input state and output state.
 
         Parameters
         ----------
@@ -48,17 +43,13 @@ class SimDriver(Driver):
         output_pv_state:
             Dictionary that maps the output process variables to their inital values
 
-        noise_params: dict
-            Dictionary mapping noisy process variables to a dictionary containing their \\
-            distribution and standard deviation.
         """
 
         super(SimDriver, self).__init__()
 
-        # track input state, output state, and noise parameters
+        # track input state and output state
         self.input_pv_state = input_pv_state
         self.output_pv_state = output_pv_state
-        self.noise_params = noise_params
 
     def read(self, pv: str) -> Union[float, np.ndarray]:
         """
@@ -81,8 +72,6 @@ class SimDriver(Driver):
         """
         if pv in self.output_pv_state:
             value = self.getParam(pv)
-            if self.noise_params:
-                value += self.get_noise(pv)
         else:
             value = self.getParam(pv)
 
@@ -143,44 +132,8 @@ class SimDriver(Driver):
         for pv in output_pvs:
             value = self.output_pv_state[pv]
 
-            # add noise
-            if pv in self.noise_params:
-                value += self.get_noise(pv)
-
             # set parameter with value
             self.setParam(pv, value)
-
-    def get_noise(self, pv: str) -> float:
-        """
-        Add noise to a process variable.
-
-        Parameters
-        ----------
-        pv: str
-            Process variable name
-
-        Returns
-        -------
-        float
-            Return noise value to add to model output value
-        """
-        noise = 0
-
-        # check pv included in noise pv attribute
-        if pv in self.noise_params:
-            dist = self.getParam(pv + ":dist")
-            sigma = self.getParam(pv + ":sigma")
-
-            # sample uniform distribution
-            if dist == "uniform":
-                full_width = np.sqrt(12) * sigma
-                noise = random.uniform(-full_width / 2.0, full_width / 2.0)
-
-            # sample normal distribution
-            elif dist == "normal":
-                noise = random.uniform(0, sigma)
-
-        return noise
 
 
 class CAServer:
@@ -218,7 +171,6 @@ class CAServer:
         model_kwargs: dict,
         input_pvdb: Dict[str, dict],
         output_pvdb: Dict[str, dict],
-        noise_params: Dict[str, dict] = {},
         prefix: str = PREFIX,
     ) -> None:
         """
@@ -243,10 +195,6 @@ class CAServer:
             Dictionary that maps the output process variable string to type (str), prec \\
             (precision), value (float), units (str), range (List[float])
 
-        noise_params: dict
-            Dictionary that maps noisy output process variables to their distribution \\
-            and standard deviation
-
         """
         surrogate_model = model_class(**model_kwargs)
         self.model = OnlineSurrogateModel([surrogate_model])
@@ -266,18 +214,6 @@ class CAServer:
         for pv in ARRAY_PVS:
             self.pvdb[pv]["count"] = len(self.output_pv_state[pv])
 
-        # set up noise process variables
-        for pv in noise_params:
-            self.pvdb[pv + ":sigma"] = {
-                "type": "float",
-                "value": noise_params[pv]["sigma"],
-            }
-            self.pvdb[pv + ":dist"] = {
-                "type": "char",
-                "count": 100,
-                "value": noise_params[pv]["dist"],
-            }
-
         # initialize channel access server
         self.server = SimpleServer()
 
@@ -286,7 +222,7 @@ class CAServer:
         self.server.createPV(prefix + ":", self.pvdb)
 
         # set up driver for handing read and write requests to process variables
-        self.driver = SimDriver(self.input_pv_state, self.output_pv_state, noise_params)
+        self.driver = SimDriver(self.input_pv_state, self.output_pv_state)
 
     def start_server(self) -> None:
         """
