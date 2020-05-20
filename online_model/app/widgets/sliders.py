@@ -15,10 +15,16 @@ from p4p.client.thread import Context
 
 from online_model import PREFIX, ARRAY_PVS
 from online_model.app import PROTOCOL, CONTEXT
+from online_model.app.widgets.controllers import Controller
 
 
 def set_pv_from_slider(
-    attr: str, old: float, new: float, pvname: str, scale: Union[float, int]
+    attr: str,
+    old: float,
+    new: float,
+    pvname: str,
+    scale: Union[float, int],
+    controller: Controller,
 ) -> None:
     """
     Callback function for slider change.
@@ -40,15 +46,15 @@ def set_pv_from_slider(
     scale:float/int
         Scale of the slider
 
+
+    controller: online_model.app.widgets.controllers.Controller
+        Controller object for getting pv values
+
     """
-    if PROTOCOL == "pva":
-        CONTEXT.put(pvname, new * scale)
-
-    elif PROTOCOL == "ca":
-        caput(pvname, new * scale)
+    controller.put(pvname, new * scale)
 
 
-def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
+def build_slider(title: str, pvname, scale, start, end, step, controller) -> Slider:
     """
     Utility function for building a slider.
 
@@ -72,6 +78,9 @@ def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
     step:np.float64
         The step between consecutive values
 
+    controller: online_model.app.widgets.controllers.Controller
+        Controller object for getting pv values
+
     Returns
     -------
     bokeh.models.widgets.sliders.Slider
@@ -80,10 +89,8 @@ def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
 
     # initialize value
     try:
-        if PROTOCOL == "pva":
-            start_val = CONTEXT.get(pvname)
-        elif PROTOCOL == "ca":
-            start_val = caget(pvname)
+        start_val = controller.get(pvname)
+
     except TimeoutError:
         print(f"No process variable found for {pvname}")
         start_val = 0
@@ -92,40 +99,48 @@ def build_slider(title: str, pvname, scale, start, end, step) -> Slider:
         title=title, value=scale * start_val, start=start, end=end, step=step
     )
 
-    slider.on_change("value", partial(set_pv_from_slider, pvname=pvname, scale=scale))
+    slider.on_change(
+        "value",
+        partial(set_pv_from_slider, pvname=pvname, scale=scale, controller=controller),
+    )
 
     return slider
 
 
-def build_sliders(CMD_PVDB: dict) -> List[Slider]:
+def build_sliders(cmd_pvdb: dict, controller: Controller) -> List[Slider]:
     """
-    Build sliders from the CMD_PVDB.
+    Build sliders from the cmd_pvdb.
 
     Parameters
     ----------
-    CMD_PVDB: dict
+    cmd_pvdb: dict
 
     Return
     ------
     list
         List of slider objects
 
+
+    controller: online_model.app.widgets.controllers.Controller
+        Controller object for getting pv values
+
     """
     sliders = []
 
-    for ii, pv in enumerate(CMD_PVDB):
-        title = pv + " (" + CMD_PVDB[pv]["units"] + ")"
+    for ii, pv in enumerate(cmd_pvdb):
+        title = pv + " (" + cmd_pvdb[pv]["units"] + ")"
         pvname = PREFIX + ":" + pv
-        step = (CMD_PVDB[pv]["range"][1] - CMD_PVDB[pv]["range"][0]) / 100.0
+        step = (cmd_pvdb[pv]["range"][1] - cmd_pvdb[pv]["range"][0]) / 100.0
         scale = 1
 
         slider = build_slider(
             title,
             pvname,
             scale,
-            CMD_PVDB[pv]["range"][0],
-            CMD_PVDB[pv]["range"][1],
+            cmd_pvdb[pv]["range"][0],
+            cmd_pvdb[pv]["range"][1],
             step,
+            controller,
         )
         sliders.append(slider)
 
