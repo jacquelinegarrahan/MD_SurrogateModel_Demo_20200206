@@ -16,13 +16,12 @@ from bokeh import palettes, colors
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
-from online_model import PREFIX, SIM_PVDB, CMD_PVDB
 from online_model.app.controllers import Controller
 from online_model.app.widgets.sliders import build_sliders
-from online_model.app.widgets.plots import ImagePlot
-from online_model.app.widgets.plots import Striptool
+from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
 from online_model.app import get_protocol
+from online_model import PREFIX, SIM_PVDB, CMD_PVDB, EXCLUDE_SLIDERS
 
 # need surrogate model image processing methods
 from online_model.model.MySurrogateModel import MySurrogateModel
@@ -53,7 +52,7 @@ image_select = Select(
 )
 
 
-def on_image_selection(attrname, old, new):
+def image_select_callback(attrname, old, new):
     """
     Callback function for dropdown selection that updates the global current variable.
     """
@@ -61,10 +60,10 @@ def on_image_selection(attrname, old, new):
     current_image_pv = new
 
 
-image_select.on_change("value", on_image_selection)
+image_select.on_change("value", image_select_callback)
 
 # Set up image update callback
-def image_callback():
+def image_update_callback():
     """
     Calls plot controller update with the current global process variable
     """
@@ -82,7 +81,7 @@ for var, value in CMD_PVDB.items():
 sliders = build_sliders(CMD_PVDB, controller)
 slider_col = column(sliders, width=350)
 
-# Set up the controller for the plot
+# Set up the striptool
 striptool = Striptool(SIM_PVDB, controller)
 striptool.build_plot()
 
@@ -102,18 +101,23 @@ striptool_select = Select(
 )
 striptool_select.on_change("value", striptool_select_callback)
 
+# striptool data update callback
+def striptool_update_callback():
+    """
+    Calls striptool update with the current global process variable.
+    """
+    global current_striptool_pv
+    striptool.update(current_striptool_pv)
+
+
 # add table
 value_table = ValueTable(SIM_PVDB, controller)
 
-# Set up plot and table update callback
-def data_callback():
+# Set up table update callback
+def table_update_callback():
     """
-    Calls plot controller update with the current global process variable
-    and updates the value table.
+    Updates the value table.
     """
-    global current_striptool_pv
-
-    striptool.update(current_striptool_pv)
     value_table.update()
 
 
@@ -131,5 +135,6 @@ curdoc().add_root(
     )
 )
 
-curdoc().add_periodic_callback(image_callback, 250)
-curdoc().add_periodic_callback(data_callback, 250)
+curdoc().add_periodic_callback(image_update_callback, 250)
+curdoc().add_periodic_callback(striptool_update_callback, 250)
+curdoc().add_periodic_callback(table_update_callback, 250)
