@@ -7,8 +7,8 @@ from typing import Dict, Mapping, Union
 from epics import caget, PV
 from pcaspy import Driver, SimpleServer
 
+from online_model.model.MySurrogateModel import MySurrogateModel
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model.model.custom_model import MySurrogateModel, MyScaler
 from online_model import ARRAY_PVS, PREFIX, MODEL_INFO, MODEL_FILE
 
 
@@ -214,6 +214,8 @@ class CAServer:
 
     def __init__(
         self,
+        model_class,
+        model_kwargs: dict,
         input_pvdb: Dict[str, dict],
         output_pvdb: Dict[str, dict],
         noise_params: Dict[str, dict] = {},
@@ -227,6 +229,12 @@ class CAServer:
 
         Parameters
         ----------
+        model_class
+            Model class to be instantiated
+
+        model_kwargs: dict
+            kwargs for initialization
+
         in_pvdb: dict
             Dictionary that maps the input process variable string to type (str), prec \\
              (precision), value (float), units (str), range (List[float])
@@ -240,35 +248,7 @@ class CAServer:
             and standard deviation
 
         """
-        # prepare info necessary to initialize
-        image_input_scales = MODEL_INFO["input_scales"][-1]
-        image_output_scales = MODEL_INFO["output_scales"][-1]
-        image_offset = MODEL_INFO["output_offsets"][-1]
-        output_scales = MODEL_INFO["output_scales"][:-1]
-        output_offsets = MODEL_INFO["output_offsets"][:-1]
-        n_scalar_vars = len(MODEL_INFO["input_ordering"])
-        n_scalar_outputs = len(MODEL_INFO["output_ordering"])
-        input_scales = MODEL_INFO["input_scales"][:n_scalar_vars]
-        input_offsets = MODEL_INFO["input_offsets"][:n_scalar_vars]
-        model_value_min = MODEL_INFO["lower"]
-        model_value_max = MODEL_INFO["upper"]
-        image_shape = (MODEL_INFO["bins"][0], MODEL_INFO["bins"][1])
-
-        # Create instance of scaler object
-        my_scaler_obj = MyScaler(
-            input_scales,
-            input_offsets,
-            output_scales,
-            output_offsets,
-            model_value_min,
-            model_value_max,
-            image_input_scales,
-            image_output_scales,
-            n_scalar_vars,
-            image_shape,
-        )
-
-        surrogate_model = MySurrogateModel(MODEL_FILE, my_scaler_obj)
+        surrogate_model = model_class(**model_kwargs)
         self.model = OnlineSurrogateModel([surrogate_model])
 
         # set up db for initializing process variables

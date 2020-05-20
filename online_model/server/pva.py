@@ -11,13 +11,7 @@ from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
 from online_model.model.MySurrogateModel import MySurrogateModel
-from online_model import (
-    PREFIX,
-    MODEL_INFO,
-    MODEL_FILE,
-    DEFAULT_LASER_IMAGE,
-    MODEL_KWARGS,
-)
+from online_model import PREFIX, MODEL_INFO, MODEL_FILE, DEFAULT_LASER_IMAGE
 
 
 class ModelLoader(threading.local):
@@ -36,12 +30,20 @@ class ModelLoader(threading.local):
     referenced locally.
     """
 
-    def __init__(self, model_class):
+    def __init__(self, model_class, model_kwargs: dict) -> None:
         """
         Initializes OnlineSurrogateModel.
+
+        Parameters
+        ----------
+        model_class
+            Model class to be instantiated
+
+        model_kwargs: dict
+            kwargs for initialization
         """
 
-        surrogate_model = model_class(**MODEL_KWARGS)
+        surrogate_model = model_class(**model_kwargs)
         self.model = OnlineSurrogateModel([surrogate_model])
 
 
@@ -121,7 +123,11 @@ class PVAServer:
     """
 
     def __init__(
-        self, model, in_pvdb: Dict[str, dict], out_pvdb: Dict[str, dict]
+        self,
+        model_class,
+        model_kwargs: dict,
+        in_pvdb: Dict[str, dict],
+        out_pvdb: Dict[str, dict],
     ) -> None:
         """
         Initialize the global process variable list, populate the initial values for \\
@@ -131,6 +137,12 @@ class PVAServer:
 
         Parameters
         ----------
+        model_class: class
+            Model class to be instantiated
+
+        model_kwargs: dict
+            kwargs for initialization
+
         in_pvdb: dict
             Dictionary that maps the input process variable string to type (str), prec \\
             (precision), value (float), units (str), range (List[float])
@@ -147,7 +159,7 @@ class PVAServer:
         input_pvs = {}
 
         # initialize loader for model
-        model_loader = ModelLoader(model)
+        model_loader = ModelLoader(model_class)
 
         # these aren't currently used; but, probably not a bad idea to have around
         # for introspection
@@ -209,4 +221,5 @@ class PVAServer:
         """
         Starts the server and runs until KeyboardInterrupt.
         """
+        print("Starting Server...")
         Server.forever(providers=[providers])
