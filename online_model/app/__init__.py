@@ -15,23 +15,21 @@ from p4p.client.thread import Context
 from online_model import PREFIX, ARRAY_PVS
 
 
-# Parse arguments passed through bokeh serve
-# requires protocol to be set
-parser = ArgumentParser()
-parser.add_argument(
-    "-p",
-    "--protocol",
-    metavar="PROTOCOL",
-    nargs=1,
-    type=str,
-    choices=["pva", "ca"],
-    help="Protocol to use (ca, pva)",
-    required=True,
-)
-args = parser.parse_args()
-PROTOCOL = args.protocol[0]
+def get_protocol():
+    # Parse arguments passed through bokeh serve
+    # requires protocol to be set
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-p",
+        "--protocol",
+        metavar="PROTOCOL",
+        nargs=1,
+        type=str,
+        choices=["pva", "ca"],
+        help="Protocol to use (ca, pva)",
+        required=True,
+    )
+    args = parser.parse_args()
 
-# initialize context for pva
-CONTEXT = None
-if PROTOCOL == "pva":
-    CONTEXT = Context("pva")
+    # get protocol
+    return args.protocol[0]
