@@ -40,6 +40,10 @@ class SurrogateModel(ABC):
         """
         pass
 
+    @abstractmethod
+    def prepare_image_from_pv(self):
+        pass
+
 
 def load_model_info(model_file: str) -> ModelInfo:
     """

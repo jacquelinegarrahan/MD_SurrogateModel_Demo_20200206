@@ -1,5 +1,6 @@
 import random
 import h5py
+import copy
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -255,3 +256,44 @@ Example Usage:
         output["x:y"] = image_values
 
         return output
+
+    @staticmethod
+    def prepare_image_from_pv(output, protocol: str):
+        """
+        Contains model specific processing for the image output.
+
+        Parameters
+        ----------
+        output:
+            Direct output from the get call
+        protocol: str
+            Indicates ca or pva protocol
+        """
+        image = None
+        if protocol == "ca":
+            nx = output[0]
+            ny = output[1]
+            ext = output[2:6]
+            dw = ext[1] - ext[0]
+            dh = ext[3] - ext[2]
+            image = output[6:]
+            image[np.where(image <= 0)] = 0  # Set negative to zero
+            image = image.reshape(int(nx), int(ny))
+
+        elif protocol == "pva":
+            # context returns np array with WRITEABLE=False
+            # copy to manipulate array below
+            attrib = output.attrib
+            dw = attrib["dw"]
+            dh = attrib["dh"]
+            nx, ny = output.shape
+            image = copy.copy(output)
+            image[np.where(image <= 0)] = 0
+
+        return {
+            "image": [image],
+            "x": [-dw / 2],
+            "y": [-dh / 2],
+            "dw": [dw],
+            "dh": [dh],
+        }
