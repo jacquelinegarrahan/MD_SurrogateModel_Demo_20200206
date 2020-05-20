@@ -24,8 +24,9 @@ def start_server(protocol):
 
     elif protocol == "pva":
         from online_model.server.pva import PVAServer
+        from online_model.model.MySurrogateModel import MySurrogateModel
 
-        server = PVAServer(CMD_PVDB, SIM_PVDB)
+        server = PVAServer(MySurrogateModel, CMD_PVDB, SIM_PVDB)
         server.start_server()
 
     else:

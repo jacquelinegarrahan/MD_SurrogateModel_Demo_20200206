@@ -11,7 +11,13 @@ from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
 from online_model.model.MySurrogateModel import MySurrogateModel
-from online_model import PREFIX, MODEL_INFO, MODEL_FILE, DEFAULT_LASER_IMAGE
+from online_model import (
+    PREFIX,
+    MODEL_INFO,
+    MODEL_FILE,
+    DEFAULT_LASER_IMAGE,
+    MODEL_KWARGS,
+)
 
 
 class ModelLoader(threading.local):
@@ -30,17 +36,13 @@ class ModelLoader(threading.local):
     referenced locally.
     """
 
-    def __init__(self):
+    def __init__(self, model_class):
         """
         Initializes OnlineSurrogateModel.
         """
 
-        surrogate_model = MySurrogateModel(MODEL_FILE, DEFAULT_LASER_IMAGE)
+        surrogate_model = model_class(**MODEL_KWARGS)
         self.model = OnlineSurrogateModel([surrogate_model])
-
-
-# initialize loader for model
-model_loader = ModelLoader()
 
 
 class InputHandler:
@@ -118,7 +120,9 @@ class PVAServer:
 
     """
 
-    def __init__(self, in_pvdb: Dict[str, dict], out_pvdb: Dict[str, dict]) -> None:
+    def __init__(
+        self, model, in_pvdb: Dict[str, dict], out_pvdb: Dict[str, dict]
+    ) -> None:
         """
         Initialize the global process variable list, populate the initial values for \\
         the global input variable state, generate starting output from the main thread \\
@@ -138,8 +142,12 @@ class PVAServer:
         # need these to be global to access from threads
         global providers
         global input_pvs
+        global model_loader
         providers = {}
         input_pvs = {}
+
+        # initialize loader for model
+        model_loader = ModelLoader(model)
 
         # these aren't currently used; but, probably not a bad idea to have around
         # for introspection
