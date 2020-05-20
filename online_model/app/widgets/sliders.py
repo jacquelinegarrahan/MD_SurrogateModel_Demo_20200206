@@ -14,8 +14,7 @@ from epics import caget, caput
 from p4p.client.thread import Context
 
 from online_model import PREFIX, ARRAY_PVS
-from online_model.app import PROTOCOL, CONTEXT
-from online_model.app.widgets.controllers import Controller
+from online_model.app.controllers import Controller
 
 
 def set_pv_from_slider(

@@ -178,7 +178,7 @@ class Striptool:
         # only creating pvs for non-image pvs
         for opv in sim_pvdb:
             if opv not in array_pvs:
-                self.pv_monitors[opv] = PVScalar(
+                self.pv_monitors[opv] = PVTimeSeries(
                     f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller
                 )
 
