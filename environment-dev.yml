@@ -7,12 +7,14 @@ dependencies:
   - conda-forge::pyepics
   - conda-forge::p4p=3.4.2
   - conda-forge::jupyterlab
+  - bokeh::jupyter_bokeh
   - conda-forge::notebook
   - h5py
   - bokeh
   - click
   - black
   - pre-commit
+  - pip
   - pip:
     - tensorflow==2.1.0
     - keras==2.2.4
