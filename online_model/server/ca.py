@@ -8,7 +8,8 @@ from epics import caget, PV
 from pcaspy import Driver, SimpleServer
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS, PREFIX
+from online_model.model.custom_model import MySurrogateModel, MyScaler
+from online_model import ARRAY_PVS, PREFIX, MODEL_INFO, MODEL_FILE
 
 
 class SimDriver(Driver):
@@ -239,9 +240,36 @@ class CAServer:
             and standard deviation
 
         """
+        # prepare info necessary to initialize
+        image_input_scales = MODEL_INFO["input_scales"][-1]
+        image_output_scales = MODEL_INFO["output_scales"][-1]
+        image_offset = MODEL_INFO["output_offsets"][-1]
+        output_scales = MODEL_INFO["output_scales"][:-1]
+        output_offsets = MODEL_INFO["output_offsets"][:-1]
+        n_scalar_vars = len(MODEL_INFO["input_ordering"])
+        n_scalar_outputs = len(MODEL_INFO["output_ordering"])
+        input_scales = MODEL_INFO["input_scales"][:n_scalar_vars]
+        input_offsets = MODEL_INFO["input_offsets"][:n_scalar_vars]
+        model_value_min = MODEL_INFO["lower"]
+        model_value_max = MODEL_INFO["upper"]
+        image_shape = (MODEL_INFO["bins"][0], MODEL_INFO["bins"][1])
 
-        # initalize model instance
-        self.model = OnlineSurrogateModel()
+        # Create instance of scaler object
+        my_scaler_obj = MyScaler(
+            input_scales,
+            input_offsets,
+            output_scales,
+            output_offsets,
+            model_value_min,
+            model_value_max,
+            image_input_scales,
+            image_output_scales,
+            n_scalar_vars,
+            image_shape,
+        )
+
+        surrogate_model = MySurrogateModel(MODEL_FILE, my_scaler_obj)
+        self.model = OnlineSurrogateModel([surrogate_model])
 
         # set up db for initializing process variables
         self.pvdb = {}
@@ -298,7 +326,10 @@ class CAServer:
 
             # check if the input process variable state has been updated as
             # an indicator of new input values
-            while sim_pv_state != self.input_pv_state:
+            while not all(
+                np.array_equal(sim_pv_state[key], self.input_pv_state[key])
+                for key in self.input_pv_state
+            ):
 
                 sim_pv_state = copy.deepcopy(self.input_pv_state)
                 output_pv_state = self.model.run(self.input_pv_state)
