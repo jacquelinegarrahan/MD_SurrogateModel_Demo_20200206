@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import datasets, layers, models
-import matplotlib.pyplot as plt
 
 
 class MySurrogateModel:
@@ -43,12 +42,10 @@ Example Usage:
         self.thread_graph = tf.Graph()
         with self.thread_graph.as_default():
             self.model = tf.keras.models.model_from_json(
-                self.json_string.decode("utf-8").decode("utf-8")
+                self.json_string.decode("utf-8")
             )
             self.model.load_weights(self.model_file)
 
-        print("Loaded Model successfully")
-        self.model.load_weights(self.model_file)
         print("Loaded Weights successfully")
         ## Set basic values needed for input and output scaling
         self.model_value_max = 1  # attrs['upper']
@@ -91,46 +88,6 @@ Example Usage:
         data_scaled = ((image_values / 2) + self.image_offset) * self.image_scale
         return data_scaled
 
-    def predict(self, input_image, input_values):
-        inputs_scalar_scaled = self.scale_inputs(input_values)
-        inputs_image_scaled = self.scale_image(input_image)
-
-        # call prediction in threadsafe manner
-        with self.thread_graph.as_default():
-            predicted_output = self.model.predict(
-                [inputs_image_scaled, inputs_scalar_scaled]
-            )
-
-        predicted_image_scaled = np.array(predicted_output[0])
-        predicted_scalars_scaled = predicted_output[1]
-        predicted_scalars_unscale = self.unscale_outputs(predicted_scalars_scaled)
-        predicted_extents = predicted_scalars_unscale[
-            :, int(self.scalar_outputs - self.ndim[0]) :
-        ]
-        predicted_image_unscaled = self.unscale_image(
-            predicted_image_scaled.reshape(
-                predicted_image_scaled.shape[0], int(self.bins[0] * self.bins[1])
-            )
-        )
-        return predicted_image_unscaled, predicted_extents, predicted_scalars_unscale
-
-    def predict_scalar(self, input_values):
-        inputs_scaled = self.scale_inputs(input_values)
-        predicted_outputs = self.model.predict(inputs_scaled)
-        predicted_outputs_unscaled = self.unscale_outputs(predicted_outputs)
-        return predicted_outputs_unscaled
-
-    def predict_image(self, input_values, plotting=True):
-        inputs_scaled = self.scale_inputs(input_values)
-        predicted_outputs = self.model.predict(inputs_scaled)
-        predicted_outputs_limits = self.unscale_outputs(
-            predicted_outputs[:, : self.ndim[0]]
-        )
-        predicted_outputs_image = self.unscale_image(
-            predicted_outputs[:, int(scalar_outputs - 4) :]
-        )
-        return predicted_outputs_image, predicted_outputs_limits
-
     def unscale_inputs(self, input_values):
         data_unscaled = (
             (input_values - self.model_value_min)
@@ -155,28 +112,59 @@ Example Usage:
             output = 0
         else:
             vec = np.array([[settings[key] for key in self.input_ordering]])
-            model_output = self.predict_scalar(vec)
+            inputs_scaled = self.scale_inputs(vec)
+            model_output = self.model.predict(inputs_scaled)
+            model_output = self.unscale_outputs(predicted_outputs)
             output = dict(zip(self.output_ordering, model_output.T))
+
         return output
 
-    def evaluate(self, settings):
+    def predict(self, settings):
         vec = np.array([settings[key] for key in self.input_ordering])
         image = np.array([settings["image"]])
-        predicted_image, predicted_extents, predicted_scalars = self.predict(
-            image, [vec]
+
+        inputs_scalar_scaled = self.scale_inputs([vec])
+        inputs_image_scaled = self.scale_image(image)
+
+        # call prediction in threadsafe manner
+        with self.thread_graph.as_default():
+            predicted_output = self.model.predict(
+                [inputs_image_scaled, inputs_scalar_scaled]
+            )
+
+        predicted_image_scaled = np.array(predicted_output[0])
+        predicted_scalars_scaled = predicted_output[1]
+        predicted_scalars_unscaled = self.unscale_outputs(predicted_scalars_scaled)
+        predicted_extents = predicted_scalars_unscale[
+            :, int(self.scalar_outputs - self.ndim[0]) :
+        ]
+        predicted_image_unscaled = self.unscale_image(
+            predicted_image_scaled.reshape(
+                predicted_image_scaled.shape[0], int(self.bins[0] * self.bins[1])
+            )
         )
-        predicted_output = dict(zip(self.output_ordering, predicted_scalars.T))
+
+        predicted_output = dict(zip(self.output_ordering, predicted_scalars_unscaled.T))
         predicted_image = predicted_image.reshape(
             (int(self.bins[0]), int(self.bins[1]))
         )
         predicted_output["extents"] = predicted_extents
-        predicted_output["image"] = predicted_image
+        predicted_output["image"] = predicted_image_unscaled
         return predicted_output
 
     def evaluate_image(self, settings, position_scale=10e6):
         vec = np.array([[settings[key] for key in self.input_ordering]])
-        model_output, extent = self.predict_image(vec)
-        output = model_output.reshape((int(self.bins[0]), int(self.bins[1])))
+
+        inputs_scaled = self.scale_inputs(vec)
+        predicted_outputs = self.model.predict(inputs_scaled)
+        predicted_outputs_limits = self.unscale_outputs(
+            predicted_outputs[:, : self.ndim[0]]
+        )
+        predicted_outputs_image = self.unscale_image(
+            predicted_outputs[:, int(scalar_outputs - 4) :]
+        )
+
+        output = predicted_outputs_image.reshape((int(self.bins[0]), int(self.bins[1])))
         return output, extent
 
     def use_stock_input_image(self):
