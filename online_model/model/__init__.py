@@ -1,3 +1,6 @@
+import copy
+from online_model import REDUNDANT_INPUT_OUTPUT
+
 # Some input/output variables have the same name and must be unique.
 # Below are utility functions to fix this:
 

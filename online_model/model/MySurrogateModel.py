@@ -5,6 +5,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import datasets, layers, models
 
+from online_model.model import apply_temporary_ordering_patch
+
 
 class MySurrogateModel:
     """
@@ -45,6 +47,12 @@ Example Usage:
                 self.json_string.decode("utf-8")
             )
             self.model.load_weights(self.model_file)
+
+        # TEMPORARY PATCH FOR INPUT/OUTPUT REDUNDANT VARS
+        self.input_ordering = apply_temporary_ordering_patch(self.input_ordering, "in")
+        self.output_ordering = apply_temporary_ordering_patch(
+            self.output_ordering, "out"
+        )
 
         print("Loaded Weights successfully")
         ## Set basic values needed for input and output scaling
@@ -120,6 +128,9 @@ Example Usage:
         return output
 
     def predict(self, settings):
+        if not "image" in settings:
+            settings["image"] = self.stock_image_input
+
         vec = np.array([settings[key] for key in self.input_ordering])
         image = np.array([settings["image"]])
 
@@ -135,7 +146,7 @@ Example Usage:
         predicted_image_scaled = np.array(predicted_output[0])
         predicted_scalars_scaled = predicted_output[1]
         predicted_scalars_unscaled = self.unscale_outputs(predicted_scalars_scaled)
-        predicted_extents = predicted_scalars_unscale[
+        predicted_extents = predicted_scalars_unscaled[
             :, int(self.scalar_outputs - self.ndim[0]) :
         ]
         predicted_image_unscaled = self.unscale_image(
@@ -145,12 +156,13 @@ Example Usage:
         )
 
         predicted_output = dict(zip(self.output_ordering, predicted_scalars_unscaled.T))
-        predicted_image = predicted_image.reshape(
+        predicted_image = predicted_image_unscaled.reshape(
             (int(self.bins[0]), int(self.bins[1]))
         )
         predicted_output["extents"] = predicted_extents
         predicted_output["image"] = predicted_image_unscaled
-        return predicted_output
+
+        return self.prepare_outputs(predicted_output)
 
     def evaluate_image(self, settings, position_scale=10e6):
         vec = np.array([[settings[key] for key in self.input_ordering]])
@@ -202,3 +214,44 @@ Example Usage:
             random_eval_output = self.evaluate(individual)
             print("Output Generated")
         return random_eval_output
+
+    def prepare_outputs(self, predicted_output):
+        """
+        Prepares the model outputs to be served so no additional
+        manipulation happens in the OnlineSurrogateModel class
+
+        Parameters
+        ----------
+        model_outputs: dict
+            Dictionary of output variables to np.ndarrays of outputs
+
+        Returns
+        -------
+        dict
+            Dictionary of output variables to respective scalars
+            (reduced dimensionality of the numpy arrays)
+
+        Note
+        ----
+        This could also be accomplished by reshaping/sampling the arrays
+        in scaling.
+        """
+        output = {}
+        for scalar in self.output_ordering:
+            output[scalar] = predicted_output[scalar][0]
+
+        image_array = np.array(predicted_output["image"]).reshape(
+            1, self.bins[0] * self.bins[1]
+        )
+        image_extents = list(predicted_output["extents"][0])
+
+        image_values = np.zeros((2 + len(image_extents) + image_array.shape[1],))
+
+        image_values[0] = self.bins[0]
+        image_values[1] = self.bins[1]
+        image_values[2:6] = image_extents
+        image_values[6:] = image_array
+
+        output["x:y"] = image_values
+
+        return output
