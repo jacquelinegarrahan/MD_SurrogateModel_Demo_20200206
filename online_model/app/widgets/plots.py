@@ -1,18 +1,7 @@
-import copy
-import time
-
-from argparse import ArgumentParser
-from functools import partial
-import numpy as np
-from typing import Union, List, Dict, Tuple
-from abc import ABC, abstractmethod
+from typing import List
 
 from bokeh.plotting import figure
-from bokeh.models import Slider
-from bokeh.models import ColumnDataSource, DataTable, TableColumn, StringFormatter
-
-from epics import caget, caput
-from p4p.client.thread import Context
+from bokeh.models import ColumnDataSource
 
 from online_model.app.controllers import Controller
 from online_model.app.monitors import PVImage, PVTimeSeries

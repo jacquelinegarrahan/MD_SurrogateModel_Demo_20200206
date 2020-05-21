@@ -1,20 +1,10 @@
-import copy
-import time
-
-from argparse import ArgumentParser
 from functools import partial
-import numpy as np
 from typing import Union, List
 
-from bokeh.plotting import figure
 from bokeh.models import Slider
-from bokeh.models import ColumnDataSource
 
-from epics import caget, caput
-from p4p.client.thread import Context
-
-from online_model import PREFIX, ARRAY_PVS, EXCLUDE_SLIDERS
 from online_model.app.controllers import Controller
+from online_model import PREFIX, ARRAY_PVS, EXCLUDE_SLIDERS
 
 
 def set_pv_from_slider(
@@ -53,7 +43,9 @@ def set_pv_from_slider(
     controller.put(pvname, new * scale)
 
 
-def build_slider(title: str, pvname, scale, start, end, step, controller) -> Slider:
+def build_slider(
+    title: str, pvname, scale, start, end, step, controller, server="bokeh"
+) -> Slider:
     """
     Utility function for building a slider.
 
@@ -98,6 +90,7 @@ def build_slider(title: str, pvname, scale, start, end, step, controller) -> Sli
         title=title, value=scale * start_val, start=start, end=end, step=step
     )
 
+    # set up callback
     slider.on_change(
         "value",
         partial(set_pv_from_slider, pvname=pvname, scale=scale, controller=controller),
