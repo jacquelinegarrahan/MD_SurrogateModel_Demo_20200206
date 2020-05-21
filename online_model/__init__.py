@@ -2,17 +2,18 @@ import os
 import h5py
 import numpy as np
 
-ROOT_DIR = os.path.abspath(os.path.join(os.pardir, os.pardir))
-
 # set keras backend to tensorflow to prevent theano import errors
 os.environ["KERAS_BACKEND"] = "tensorflow"
 os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = "1000000"
 
 from online_model.util import fix_units
 
-MODEL_FILE = f"{ROOT_DIR}/online_model/files/CNN_051620_SurrogateModel.h5"
-STOCK_LASER_IMAGE = f"{ROOT_DIR}/online_model/files/example_input_image.npy"
-STOCK_INPUT_SCALARS = f"{ROOT_DIR}/online_model/files/example_input_scalars.npy"
+
+# pva prefix
+PREFIX = "smvm"
+
+MODEL_FILE = "online_model/files/CNN_051620_SurrogateModel.h5"
+STOCK_LASER_IMAGE = "online_model/files/example_input_image.npy"
 
 # pva prefix
 PREFIX = "smvm"
