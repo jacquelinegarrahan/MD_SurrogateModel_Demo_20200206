@@ -17,6 +17,8 @@ Note: Tensorflow is installed via pip as outlined in the tensorflow documentatio
 
 ## To Run the Demo
 
+### Directly, using the bokeh server:
+
 Open two terminal windows and three internet browser tabs/windows. In each terminal, activate the online-surrogate-model conda environment.
 
 In the first terminal, type (replacing `protocol` with `pva` for PVAccess and `ca` for Channel Access):
@@ -27,7 +29,7 @@ $ python bin/cli.py serve start-server {protocol}
 In the other terminal:
 
 ```
-$ bokeh serve online_model/app/dashboard.py --args -p {protocol}
+$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol}
 ```
 
 In an internet browser tab, navigate to:
@@ -37,7 +39,7 @@ http://localhost:5006/dashboard
 The controls in this dashboard can also be opened in individual windows using the command:
 
 ```
-$ bokeh serve online_model/app/controls.py online_model/app/striptool.py online_model/app/image_viewer.py --args -p {protocol}
+$ bokeh serve online_model/app/pages/controls.py online_model/app/pages/striptool.py online_model/app/pages/image_viewer.py --args -p {protocol}
 ```
 
 And navigating to the following pages:
@@ -64,9 +66,16 @@ The Channel Access process variables can be monitored using the command:
 $ caget {pvname}
 ```
 
-## Run Jupyter Notebook
-python -m ipykernel install --user --name=online-surrogate-model
+### Via the notebook demo:
+First set up the kernel:
 
+` $ python -m ipykernel install --user --name=online-surrogate-model`
+
+Once that is complete, launch the notebook:
+
+` $ jupyter notebook `
+
+When the notebook has launched from the repository, open the Dashboard.ipynb in one tab and Server.ipynb in another. Begin with the Server.ipynb instructions.
 
 ## Possible issues
 You may receive many Tensorflow warnings, due to depreciation - these can be ignored and will be fixed in the future.
@@ -79,3 +88,49 @@ In addition to the project environmment a .yml file has been included for a deve
 
 These can be set up by running the following command inside the `online-surrogate-model-dev` conda environment:
 `pre-commit install`
+
+
+## Code structure
+
+MD_SurrogateModel_Demo_20200206
+├── README.md
+├── bin
+│   ├── __init__.py
+│   ├── cli.py
+│   └── commands
+│       ├── __init__.py
+│       └── serve.py
+├── environment-dev.yml
+├── environment.yml
+└── online_model
+    ├── __init__.py
+    ├── app
+    │   ├── __init__.py
+    │   ├── controllers.py
+    │   ├── monitors.py
+    │   ├── pages
+    │   │   ├── __init__.py
+    │   │   ├── controls.py
+    │   │   ├── dashboard.py
+    │   │   ├── image_viewer.py
+    │   │   └── striptool.py
+    │   └── widgets
+    │       ├── __init__.py
+    │       ├── plots.py
+    │       ├── sliders.py
+    │       └── tables.py
+    ├── files
+    │   ├── CNN_051620_SurrogateModel.h5
+    │   └── example_input_image.npy
+    ├── model
+    │   ├── MySurrogateModel.py
+    │   ├── __init__.py
+    │   └── surrogate_model.py
+    ├── notebooks
+    │   ├── Dashboard.ipynb
+    │   └── Server.ipynb
+    ├── server
+    │   ├── __init__.py
+    │   ├── ca.py
+    │   └── pva.py
+    └── util.py
