@@ -7,7 +7,7 @@ from epics import caget
 from pcaspy import Driver, SimpleServer
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS, PREFIX
+from online_model import ARRAY_PVS
 
 
 class SimDriver(Driver):
@@ -169,7 +169,7 @@ class CAServer:
         model_kwargs: dict,
         input_pvdb: Dict[str, dict],
         output_pvdb: Dict[str, dict],
-        prefix: str = PREFIX,
+        prefix: str,
     ) -> None:
         """
         Create OnlineSurrogateModel instance and initialize output variables by running \\

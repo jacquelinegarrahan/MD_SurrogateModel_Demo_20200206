@@ -15,18 +15,18 @@ def start_server(protocol):
     PROTOCOL options are 'ca' and 'pva'
     """
     from online_model.model.MySurrogateModel import MySurrogateModel
-    from online_model import CMD_PVDB, SIM_PVDB, MODEL_KWARGS
+    from online_model import CMD_PVDB, SIM_PVDB, MODEL_KWARGS, PREFIX
 
     if protocol == "ca":
         from online_model.server.ca import CAServer
 
-        server = CAServer(MySurrogateModel, MODEL_KWARGS, CMD_PVDB, SIM_PVDB)
+        server = CAServer(MySurrogateModel, MODEL_KWARGS, CMD_PVDB, SIM_PVDB, PREFIX)
         server.start_server()
 
     elif protocol == "pva":
         from online_model.server.pva import PVAServer
 
-        server = PVAServer(MySurrogateModel, MODEL_KWARGS, CMD_PVDB, SIM_PVDB)
+        server = PVAServer(MySurrogateModel, MODEL_KWARGS, CMD_PVDB, SIM_PVDB, PREFIX)
         server.start_server()
 
     else:
