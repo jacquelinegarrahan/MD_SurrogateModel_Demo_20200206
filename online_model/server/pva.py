@@ -159,7 +159,7 @@ class PVAServer:
         input_pvs = {}
 
         # initialize loader for model
-        model_loader = ModelLoader(model_class)
+        model_loader = ModelLoader(model_class, model_kwargs)
 
         # these aren't currently used; but, probably not a bad idea to have around
         # for introspection
