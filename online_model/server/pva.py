@@ -8,7 +8,6 @@ from p4p.server.thread import SharedPV
 from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import PREFIX
 
 
 class ModelLoader(threading.local):
@@ -50,6 +49,9 @@ class InputHandler:
     process variables.
     """
 
+    def __init__(self, prefix):
+        self.prefix = prefix
+
     def put(self, pv, op) -> None:
         """
         Updates the global input process variable state, posts the input process \\
@@ -71,14 +73,14 @@ class InputHandler:
 
         # update input values and global input process variable state
         pv.post(op.value())
-        input_pvs[op.name().replace(f"{PREFIX}:", "")] = op.value()
+        input_pvs[op.name().replace(f"{self.prefix}:", "")] = op.value()
 
         # run model using global input process variable state
         output_pv_state = model_loader.model.run(input_pvs)
 
         # now update output variables
         for pv_item, value in output_pv_state.items():
-            output_provider = providers[f"{PREFIX}:{pv_item}"]
+            output_provider = providers[f"{self.prefix}:{pv_item}"]
 
             if isinstance(value, (np.ndarray,)):
                 image_array = value[6:].reshape((50, 50))
@@ -125,6 +127,7 @@ class PVAServer:
         model_kwargs: dict,
         in_pvdb: Dict[str, dict],
         out_pvdb: Dict[str, dict],
+        prefix: str,
     ) -> None:
         """
         Initialize the global process variable list, populate the initial values for \\
@@ -147,6 +150,9 @@ class PVAServer:
         out_pvdb: dict
             Dictionary that maps the output process variable string to type (str), \\
             prec (precision), value (float), units (str), range (List[float])
+
+        prefix: str
+            Prefix to use when serving
         """
         # need these to be global to access from threads
         global providers
@@ -172,9 +178,11 @@ class PVAServer:
 
         # create PVs for model inputs
         for in_pv in in_pvdb:
-            pvname = f"{PREFIX}:{in_pv}"
+            pvname = f"{prefix}:{in_pv}"
             pv = SharedPV(
-                handler=InputHandler(),  # Use InputHandler class to handle callbacks
+                handler=InputHandler(
+                    prefix
+                ),  # Use InputHandler class to handle callbacks
                 nt=NTScalar("d"),
                 initial=in_pvdb[in_pv]["value"],
             )
@@ -182,7 +190,7 @@ class PVAServer:
 
         # create PVs for model outputs
         for out_pv in out_pvdb:
-            pvname = f"{PREFIX}:{out_pv}"
+            pvname = f"{prefix}:{out_pv}"
 
             # use default handler for the output process variables
             # updates to output pvs are handled from post calls within the input update
