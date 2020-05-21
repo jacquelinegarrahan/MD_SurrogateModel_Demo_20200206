@@ -1,16 +1,7 @@
-import numpy as np
-import time
 import sys
 import os
-from functools import partial
-from argparse import ArgumentParser
-
-from epics import caget, caput, PV
-from p4p.client.thread import Context
 
 from bokeh.io import curdoc
-from bokeh.models import ColumnDataSource, Slider
-from bokeh.plotting import figure
 from bokeh.layouts import column, row
 from bokeh.models.widgets import Select
 

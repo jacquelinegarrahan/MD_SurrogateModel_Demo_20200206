@@ -81,8 +81,4 @@ SIM_PVDB["x:y"] = {
 
 ARRAY_PVS = ["x:y"]
 
-# dims
-DIMS = [50, 50]
-
-
 MODEL_KWARGS = {"model_file": MODEL_FILE, "stock_image_input": DEFAULT_LASER_IMAGE}

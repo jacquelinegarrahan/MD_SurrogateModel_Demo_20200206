@@ -4,7 +4,6 @@ import copy
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import datasets, layers, models
 
 from online_model.model import apply_temporary_ordering_patch
 

@@ -1,15 +1,13 @@
 import copy
-import time
 import numpy as np
 import random
 from typing import Dict, Mapping, Union
 
-from epics import caget, PV
+from epics import caget
 from pcaspy import Driver, SimpleServer
 
-from online_model.model.MySurrogateModel import MySurrogateModel
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS, PREFIX, MODEL_INFO, MODEL_FILE
+from online_model import ARRAY_PVS, PREFIX
 
 
 class SimDriver(Driver):

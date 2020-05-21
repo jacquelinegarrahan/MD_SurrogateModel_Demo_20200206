@@ -1,8 +1,6 @@
-import random
 import threading
 import numpy as np
-import time
-from typing import Dict, Mapping, Union
+from typing import Dict
 
 from p4p.nt.ndarray import ntndarray as NTNDArrayData
 from p4p.nt import NTScalar, NTNDArray
@@ -10,8 +8,7 @@ from p4p.server.thread import SharedPV
 from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model.model.MySurrogateModel import MySurrogateModel
-from online_model import PREFIX, MODEL_INFO, MODEL_FILE, DEFAULT_LASER_IMAGE
+from online_model import PREFIX
 
 
 class ModelLoader(threading.local):

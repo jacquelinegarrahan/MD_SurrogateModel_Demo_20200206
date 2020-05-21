@@ -1,22 +1,10 @@
 import numpy as np
-import sys, os
 import time
-import copy
 from typing import Dict, Tuple, Mapping, Union
 from abc import ABC, abstractmethod
 
-
-import random
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import datasets, layers, models
-from keras.models import model_from_json
-from sklearn.preprocessing import MinMaxScaler
 import h5py
-import random
-import pickle
-
-from online_model import MODEL_FILE, DEFAULT_LASER_IMAGE, REDUNDANT_INPUT_OUTPUT
 
 
 # TODO: What are bins? What is ext?

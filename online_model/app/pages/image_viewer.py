@@ -1,17 +1,11 @@
-import numpy as np
-import copy
 import sys
 import os
-from functools import partial
-
-from epics import caget, PV
-from p4p.client.thread import Context
 
 from bokeh.models.widgets import Select
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 
-from bokeh import palettes, colors
+from bokeh import palettes
 
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
