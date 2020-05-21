@@ -198,5 +198,5 @@ class Striptool:
         self.current_pv = current_pv
         ts, ys = self.pv_monitors[current_pv].poll()
         units = self.pv_monitors[current_pv].units[0]
-        self.source.data = dict(x=ts, y=ys * 1e6)
+        self.source.data = dict(x=ts, y=ys)
         self.p.yaxis.axis_label = f"{current_pv} ({units})"
