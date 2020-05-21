@@ -1,18 +1,4 @@
-import copy
-import time
-
 from argparse import ArgumentParser
-from functools import partial
-import numpy as np
-
-from bokeh.plotting import figure
-from bokeh.models import Slider
-from bokeh.models import ColumnDataSource
-
-from epics import caget, caput
-from p4p.client.thread import Context
-
-from online_model import PREFIX, ARRAY_PVS
 
 
 def get_protocol():
