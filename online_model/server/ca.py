@@ -12,17 +12,6 @@ from online_model import IMAGE_PVS, DEFAULT_PRECISION, DEFAULT_COLOR_MODE
 from online_model.util import build_image_pvs
 
 
-def format_model_output(output_state):
-    rebuilt_output = {}
-    for pv, value in output_state.items():
-        if pv in IMAGE_PVS:
-            rebuilt_output[f"{pv}.ArrayData_RBV"] = value
-        else:
-            rebuilt_output[pv] = value
-
-    return rebuilt_output
-
-
 class SimDriver(Driver):
     """
     Class that reacts to read an write requests to process variables.
@@ -137,7 +126,6 @@ class SimDriver(Driver):
             Dictionary that maps ouput process variable name to values
         """
         # update output process variable state
-        output_pvs = format_model_output(output_pvs)
         self.output_pv_state.update(output_pvs)
 
         # update the output process variables that have been changed
@@ -219,27 +207,8 @@ class CAServer:
         self.input_pv_state = {pv: input_pvdb[pv]["value"] for pv in input_pvdb}
 
         # get starting output from the model and set up output process variables
-        start_output_state = self.model.run(self.input_pv_state)
-        self.output_pv_state = format_model_output(start_output_state)
+        self.output_pv_state = self.model.run(self.input_pv_state)
         self.pvdb.update(output_pvdb)
-
-        # need to get rid of raw x:y
-
-        # for array pv values, create associated process variables
-        for pv in IMAGE_PVS:
-            image_pvdb = build_image_pvs(
-                pv,  # pvame
-                start_output_state[pv],  # starting image value
-                output_pvdb[pv]["units"],  # get units
-                start_output_state[f"{pv}.dw"],
-                start_output_state[f"{pv}.dh"],
-                DEFAULT_PRECISION,
-                DEFAULT_COLOR_MODE,
-            )
-
-            # remove the base entry
-            self.pvdb.pop(pv)
-            self.pvdb.update(image_pvdb)
 
         # initialize channel access server
         self.server = SimpleServer()
