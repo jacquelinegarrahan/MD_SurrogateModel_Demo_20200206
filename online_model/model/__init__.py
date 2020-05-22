@@ -37,7 +37,7 @@ def format_outputs_by_protocol(f):
         if PROTOCOL == "ca":
             for pv, value in output_state.items():
                 if pv in IMAGE_PVS:
-                    rebuilt_output[f"{pv}.ArrayData_RBV"] = value
+                    rebuilt_output[f"{pv}.ArrayData_RBV"] = value.flatten()
                 else:
                     rebuilt_output[pv] = value
 
