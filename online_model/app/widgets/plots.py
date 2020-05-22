@@ -31,7 +31,7 @@ class ImagePlot:
 
     """
 
-    def __init__(self, sim_pvdb: dict, controller: Controller, model_class) -> None:
+    def __init__(self, sim_pvdb: dict, controller: Controller) -> None:
         """
         Initialize monitors, current process variable, and data source.
 
@@ -43,16 +43,13 @@ class ImagePlot:
         controller: online_model.app.widgets.controllers.Controller
             Controller object for getting pv values
 
-        model_class:
-            Model class used for demonstration.
-
         """
         self.pv_monitors = {}
 
         for opv in sim_pvdb:
             if len(sim_pvdb[opv]["units"].split(":")) == 2:
                 self.pv_monitors[opv] = PVImage(
-                    f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller, model_class
+                    f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller
                 )
 
         self.current_pv = list(self.pv_monitors.keys())[0]

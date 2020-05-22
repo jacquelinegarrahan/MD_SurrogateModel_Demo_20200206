@@ -12,11 +12,16 @@ from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import Striptool
 from online_model import SIM_PVDB, PROTOCOL
 
+# exclude channel access data items from plots
+PLOT_PVDB = {
+    item: value for item, value in SIM_PVDB.items() if "units" in SIM_PVDB[item]
+}
+
 # create controller
 controller = Controller(PROTOCOL)
 
 # Set up the controller for the plot
-striptool = Striptool(SIM_PVDB, controller)
+striptool = Striptool(PLOT_PVDB, controller)
 striptool.build_plot()
 current_pv = striptool.current_pv
 
