@@ -2,7 +2,6 @@ import threading
 import numpy as np
 from typing import Dict
 
-from p4p.nt.ndarray import ntndarray as NTNDArrayData
 from p4p.nt import NTScalar, NTNDArray
 from p4p.server.thread import SharedPV
 from p4p.server import Server
@@ -82,24 +81,7 @@ class InputHandler:
         # now update output variables
         for pv, value in output_pv_state.items():
             output_provider = providers[f"{self.prefix}:{pv}"]
-
-            if pv not in IMAGE_PVS:
-                output_provider.post(value)
-
-            elif pv in IMAGE_PVS:
-                image_array = output_pv_state[pv]
-
-                # populate image data
-                array_data = image_array.view(NTNDArrayData)
-
-                # get dw and dh from model output
-                array_data.attrib = {
-                    "ColorMode": DEFAULT_COLOR_MODE,
-                    "dw": output_pv_state[f"{pv}.dw"],
-                    "dh": output_pv_state[f"{pv}.dh"],
-                }
-
-                output_provider.post(array_data)
+            output_provider.post(value)
 
         # mark server operation as complete
         op.done()
@@ -199,19 +181,7 @@ class PVAServer:
                     pv = SharedPV(nt=NTScalar(), initial=value)
 
                 elif pv in IMAGE_PVS:
-                    image_array = starting_output[pv]
-
-                    # populate image data
-                    array_data = image_array.view(NTNDArrayData)
-
-                    # get dw and dh from model output
-                    array_data.attrib = {
-                        "ColorMode": DEFAULT_COLOR_MODE,
-                        "dw": starting_output[f"{pv}.dw"],
-                        "dh": starting_output[f"{pv}.dh"],
-                    }
-
-                    pv = SharedPV(nt=NTNDArray(), initial=array_data)
+                    pv = SharedPV(nt=NTNDArray(), initial=value)
 
                 providers[pvname] = pv
 
