@@ -1,5 +1,6 @@
 import copy
 import functools
+from p4p.nt.ndarray import ntndarray as NTNDArrayData
 from online_model import REDUNDANT_INPUT_OUTPUT, PROTOCOL, IMAGE_PVS
 
 # Some input/output variables have the same name and must be unique.
