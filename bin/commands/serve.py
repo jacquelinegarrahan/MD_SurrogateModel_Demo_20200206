@@ -1,4 +1,5 @@
 import click
+import os
 
 
 @click.group()
@@ -14,6 +15,10 @@ def start_server(protocol):
 
     PROTOCOL options are 'ca' and 'pva'
     """
+
+    # the protocol must be set to properly assemble the CMD_PVDB, SIM_PVDB etc.
+    os.environ["PROTOCOL"] = protocol
+
     from online_model.model.MySurrogateModel import MySurrogateModel
     from online_model import CMD_PVDB, SIM_PVDB, MODEL_KWARGS, PREFIX
 
