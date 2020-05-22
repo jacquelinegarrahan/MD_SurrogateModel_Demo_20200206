@@ -14,14 +14,10 @@ from online_model.app.controllers import Controller
 from online_model.app.widgets.sliders import build_sliders
 from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
-from online_model.app import get_protocol
-from online_model import PREFIX, SIM_PVDB, CMD_PVDB, EXCLUDE_SLIDERS
+from online_model import PREFIX, SIM_PVDB, CMD_PVDB, EXCLUDE_SLIDERS, PROTOCOL
 
 # need surrogate model image processing methods
 from online_model.model.MySurrogateModel import MySurrogateModel
-
-# get protocol
-PROTOCOL = get_protocol()
 
 # create controller
 controller = Controller(PROTOCOL)
