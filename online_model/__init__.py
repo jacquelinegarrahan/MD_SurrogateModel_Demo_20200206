@@ -83,9 +83,6 @@ for ii, output_name in enumerate(MODEL_INFO["output_names"]):
 
 # sim_pvdb['z:pz']={'type': 'float', 'prec': 8, 'count':len(default_output['z:pz']),'units':'mm:delta','value':list(default_output['z:pz'])}
 
-dw = 0.01
-dh = 0.01
-
 IMAGE_SHAPE = np.array([50, 50])
 IMAGE_UNITS = "mm:mm"
 
@@ -107,7 +104,6 @@ elif PROTOCOL == "ca":
     )
     SIM_PVDB.update(image_pvs)
 
-IMAGE_PVS = ["x:y"]
 ARRAY_PVS = ["x:y"]
 
 MODEL_KWARGS = {"model_file": MODEL_FILE, "stock_image_input": DEFAULT_LASER_IMAGE}
