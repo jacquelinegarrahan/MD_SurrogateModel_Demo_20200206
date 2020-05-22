@@ -170,26 +170,20 @@ class PVAServer:
             )
             providers[pvname] = pv
 
-        # create PVs for model outputs
-        for out_pv in out_pvdb:
+        # use default handler for the output process variables
+        # updates to output pvs are handled from post calls within the input update
+        for out_pv, value in starting_output.items():
             pvname = f"{prefix}:{out_pv}"
+            if out_pv not in IMAGE_PVS:
+                pv = SharedPV(nt=NTScalar(), initial=value)
 
-            # use default handler for the output process variables
-            # updates to output pvs are handled from post calls within the input update
-            for pv, value in starting_output.items():
-                if pv not in IMAGE_PVS:
-                    pv = SharedPV(nt=NTScalar(), initial=value)
+            elif out_pv in IMAGE_PVS:
+                pv = SharedPV(nt=NTNDArray(), initial=value)
 
-                elif pv in IMAGE_PVS:
-                    pv = SharedPV(nt=NTNDArray(), initial=value)
-
-                providers[pvname] = pv
-
-            else:
-                pass  # throw exception for incorrect data type
-
-            # update global provider list
             providers[pvname] = pv
+
+        else:
+            pass  # throw exception for incorrect data type
 
     def start_server(self) -> None:
         """
