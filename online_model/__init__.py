@@ -1,13 +1,16 @@
 import os
 import h5py
 import numpy as np
+from online_model.util import fix_units, build_image_pvs
 
 # set keras backend to tensorflow to prevent theano import errors
 os.environ["KERAS_BACKEND"] = "tensorflow"
 os.environ["EPICS_CA_MAX_ARRAY_BYTES"] = "1000000"
 
-from online_model.util import fix_units
-
+# set protocol
+PROTOCOL = os.environ.get("PROTOCOL")
+if not PROTOCOL:
+    raise ValueError("Protocol is not defined")
 
 # pva prefix
 PREFIX = "smvm"
@@ -46,6 +49,10 @@ REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
 EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
 
 # Set up pvdbs
+DEFAULT_PRECISION = 8
+DEFAULT_COLOR_MODE = 0
+
+
 CMD_PVDB = {}
 for ii, input_name in enumerate(MODEL_INFO["input_names"]):
     label = input_name
@@ -54,7 +61,7 @@ for ii, input_name in enumerate(MODEL_INFO["input_names"]):
 
     CMD_PVDB[label] = {
         "type": "float",
-        "prec": 8,
+        "prec": DEFAULT_PRECISION,
         "value": DEFAULT_INPUTS[input_name],
         "units": fix_units(MODEL_INFO["input_units"][ii]),
         "range": list(MODEL_INFO["input_ranges"][ii]),
@@ -68,20 +75,39 @@ for ii, output_name in enumerate(MODEL_INFO["output_names"]):
 
     SIM_PVDB[label] = {
         "type": "float",
-        "prec": 8,
+        "prec": DEFAULT_PRECISION,
         # "value": default_output[output_name],
         "units": fix_units(MODEL_INFO["output_units"][ii]),
     }
 
 
 # sim_pvdb['z:pz']={'type': 'float', 'prec': 8, 'count':len(default_output['z:pz']),'units':'mm:delta','value':list(default_output['z:pz'])}
-SIM_PVDB["x:y"] = {
-    "type": "float",
-    "prec": 8,
-    # "count": len(default_output["x:y"]),
-    "units": "mm:mm",
-}
 
+dw = 0.01
+dh = 0.01
+
+IMAGE_SHAPE = np.array([50, 50])
+IMAGE_UNITS = "mm:mm"
+
+# TODO: ASSIGN START FOR PVA
+if PROTOCOL == "pva":
+    SIM_PVDB["x:y"] = {
+        "type": "float",
+        "prec": 8,
+        # "count": len(default_output["x:y"]),
+        "units": IMAGE_UNITS,
+    }
+elif PROTOCOL == "ca":
+    image_pvs = build_image_pvs(
+        "x:y",  # pvame
+        IMAGE_SHAPE,
+        IMAGE_UNITS,  # get units
+        DEFAULT_PRECISION,
+        DEFAULT_COLOR_MODE,
+    )
+    SIM_PVDB.update(image_pvs)
+
+IMAGE_PVS = ["x:y"]
 ARRAY_PVS = ["x:y"]
 
 MODEL_KWARGS = {"model_file": MODEL_FILE, "stock_image_input": DEFAULT_LASER_IMAGE}

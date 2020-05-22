@@ -5,10 +5,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-from online_model.model import apply_temporary_ordering_patch
+from online_model.model.surrogate_model import SurrogateModel
+from online_model.model import (
+    apply_temporary_ordering_patch,
+    format_outputs_by_protocol,
+)
 
 
-class MySurrogateModel:
+class MySurrogateModel(SurrogateModel):
     """
 Example Usage:
     Load model and use a dictionary of inputs to evaluate the NN.
@@ -215,6 +219,7 @@ Example Usage:
             print("Output Generated")
         return random_eval_output
 
+    @format_outputs_by_protocol
     def prepare_outputs(self, predicted_output):
         """
         Prepares the model outputs to be served so no additional
@@ -240,19 +245,11 @@ Example Usage:
         for scalar in self.output_ordering:
             output[scalar] = predicted_output[scalar][0]
 
-        image_array = np.array(predicted_output["image"]).reshape(
-            1, self.bins[0] * self.bins[1]
-        )
-        image_extents = list(predicted_output["extents"][0])
+        extents = list(predicted_output["extents"][0])
 
-        image_values = np.zeros((2 + len(image_extents) + image_array.shape[1],))
-
-        image_values[0] = self.bins[0]
-        image_values[1] = self.bins[1]
-        image_values[2:6] = image_extents
-        image_values[6:] = image_array
-
-        output["x:y"] = image_values
+        output["x:y"] = predicted_output["image"].reshape((self.bins[0], self.bins[1]))
+        output["x:y.dw"] = extents[1] - extents[0]
+        output["x:y.dh"] = extents[3] - extents[2]
 
         return output
 
