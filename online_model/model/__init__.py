@@ -30,6 +30,12 @@ def apply_temporary_output_patch(output):
 
 
 def format_outputs_by_protocol(f):
+    """
+    Wrapper method for formatting arrays appropriately by protocol. \
+    Collects output from the SurrogateModel.predict dictionary of process\
+    variable names to values, and formats for assignment.
+    """
+
     def format_wrapper(*args, **kwargs):
         output_state = f(*args, **kwargs)
 
