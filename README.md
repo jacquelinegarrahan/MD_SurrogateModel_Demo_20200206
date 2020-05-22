@@ -92,6 +92,7 @@ These can be set up by running the following command inside the `online-surrogat
 
 ## Code structure
 
+```
 MD_SurrogateModel_Demo_20200206
 ├── README.md
 ├── bin
@@ -134,3 +135,4 @@ MD_SurrogateModel_Demo_20200206
     │   ├── ca.py
     │   └── pva.py
     └── util.py
+```
