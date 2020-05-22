@@ -14,20 +14,21 @@ from online_model import PREFIX, SIM_PVDB, PROTOCOL
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import ImagePlot
 
-# need surrogate model image processing methods
-from online_model.model.MySurrogateModel import MySurrogateModel
+# exclude channel access data items from plots
+PLOT_PVDB = {
+    item: value for item, value in SIM_PVDB.items() if "units" in SIM_PVDB[item]
+}
 
 # create controller
 controller = Controller(PROTOCOL)
 
 # Create custom palette with low values set to white
-white = colors.named.white
 pal = list(palettes.viridis(244))  # 256 - 12 (set lowest 5% to white)
 pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
 # set up plot
-image_plot = ImagePlot(SIM_PVDB, controller, MySurrogateModel)
+image_plot = ImagePlot(PLOT_PVDB, controller)
 image_plot.build_plot(pal)
 
 # set current_pv globally

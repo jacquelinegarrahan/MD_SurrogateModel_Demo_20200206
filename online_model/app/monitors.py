@@ -32,9 +32,7 @@ class PVImage:
 
     """
 
-    def __init__(
-        self, pvname: str, units: str, controller: Controller, model_class
-    ) -> None:
+    def __init__(self, pvname: str, units: str, controller: Controller) -> None:
         """
         Initialize monitor with name and units.
 
@@ -48,15 +46,10 @@ class PVImage:
 
         controller: online_model.app.widgets.controllers.Controller
             Controller object for getting pv values
-
-        model_class:
-            Model class used for demonstration.
-
         """
         self.units = units.split(":")
         self.pvname = pvname
         self.controller = controller
-        self.model_class = model_class
 
     def poll(self) -> Dict[str, list]:
         """
@@ -69,14 +62,14 @@ class PVImage:
         """
 
         try:
-            value = self.controller.get(self.pvname)
+            value = self.controller.get_image(self.pvname)
 
         except TimeoutError:
             print(f"No process variable found for {self.pvname}")
             return DEFAULT_IMAGE_DATA
 
         # now prepare the value using method defined by the model
-        return self.model_class.prepare_image_from_pv(value, self.controller.protocol)
+        return value
 
     def variables(self) -> List[str]:
         """
@@ -133,7 +126,7 @@ class PVTimeSeries:
 
         except TimeoutError:
             print(f"No process variable found for {self.pvname}")
-            v = DEFAULT_SCALAR_VALUE
+            v = DEFAULT_SCALAR_VALUE[self.pvname]
 
         self.time = np.append(self.time, t)
         self.data = np.append(self.data, v)

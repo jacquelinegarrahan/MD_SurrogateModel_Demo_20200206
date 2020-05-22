@@ -1,5 +1,6 @@
 from typing import Union
 import numpy as np
+import copy
 from epics import caget, caput
 from p4p.client.thread import Context
 
@@ -45,10 +46,61 @@ class Controller:
 
         """
         if self.protocol == "ca":
+            breakpoint()
             return caget(pvname)
 
         elif self.protocol == "pva":
             return self.context.get(pvname)
+
+    def get_image(self, pvname):
+        """
+        Gets image data based on protocol.
+
+        Arguments
+        ---------
+        pvname: str
+            Name of process variable
+
+        Returns
+        -------
+        dict
+            Formatted image data of the form
+            ```
+                {
+                "image": [np.ndarray],
+                "x": [float],
+                "y": [float],
+                "dw": [float],
+                "dh": [float],
+            }
+            ```
+        """
+        if self.protocol == "ca":
+            pvname = pvname.replace(".ArrayData_RBV", "")
+            nx = self.get(f"{pvname}.ArraySizeX_RBV")
+            ny = self.get(f"{pvname}.ArraySizeY_RBV")
+            dw = self.get(f"{pvname}.dw")
+            dh = self.get(f"{pvname}.dh")
+            image = self.get(f"{pvname}.ArrayData_RBV")
+            image = image.reshape(int(nx), int(ny))
+
+        elif self.protocol == "pva":
+            # context returns np array with WRITEABLE=False
+            # copy to manipulate array below
+            output = self.get(pvname)
+            attrib = output.attrib
+            dw = attrib["dw"]
+            dh = attrib["dh"]
+            nx, ny = output.shape
+            image = copy.copy(output)
+
+        return {
+            "image": [image],
+            "x": [-dw / 2],
+            "y": [-dh / 2],
+            "dw": [dw],
+            "dh": [dh],
+        }
 
     def put(self, pvname, value: Union[np.ndarray, float]) -> None:
         """

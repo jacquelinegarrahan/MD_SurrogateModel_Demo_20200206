@@ -16,8 +16,11 @@ from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
 from online_model import PREFIX, SIM_PVDB, CMD_PVDB, EXCLUDE_SLIDERS, PROTOCOL
 
-# need surrogate model image processing methods
-from online_model.model.MySurrogateModel import MySurrogateModel
+
+# exclude channel access data items from plots
+PLOT_PVDB = {
+    item: value for item, value in SIM_PVDB.items() if "units" in SIM_PVDB[item]
+}
 
 # create controller
 controller = Controller(PROTOCOL)
@@ -28,7 +31,7 @@ pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
 # set up plot
-image_plot = ImagePlot(SIM_PVDB, controller, MySurrogateModel)
+image_plot = ImagePlot(PLOT_PVDB, controller)
 image_plot.build_plot(pal)
 
 # set current_pv globally
@@ -72,7 +75,7 @@ sliders = build_sliders(CMD_PVDB, controller)
 slider_col = column(sliders, width=350)
 
 # Set up the striptool
-striptool = Striptool(SIM_PVDB, controller)
+striptool = Striptool(PLOT_PVDB, controller)
 striptool.build_plot()
 
 # set up global pv
@@ -89,6 +92,7 @@ striptool_select = Select(
     value=current_striptool_pv,
     options=list(striptool.pv_monitors.keys()),
 )
+
 striptool_select.on_change("value", striptool_select_callback)
 
 # striptool data update callback
@@ -101,7 +105,7 @@ def striptool_update_callback():
 
 
 # add table
-value_table = ValueTable(SIM_PVDB, controller)
+value_table = ValueTable(PLOT_PVDB, controller)
 
 # Set up table update callback
 def table_update_callback():
