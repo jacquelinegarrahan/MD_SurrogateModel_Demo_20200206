@@ -7,7 +7,7 @@ from p4p.server.thread import SharedPV
 from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import IMAGE_PVS, DEFAULT_COLOR_MODE
+from online_model import ARRAY_PVS, DEFAULT_COLOR_MODE
 
 
 class ModelLoader(threading.local):
@@ -174,10 +174,10 @@ class PVAServer:
         # updates to output pvs are handled from post calls within the input update
         for out_pv, value in starting_output.items():
             pvname = f"{prefix}:{out_pv}"
-            if out_pv not in IMAGE_PVS:
+            if out_pv not in ARRAY_PVS:
                 pv = SharedPV(nt=NTScalar(), initial=value)
 
-            elif out_pv in IMAGE_PVS:
+            elif out_pv in ARRAY_PVS:
                 pv = SharedPV(nt=NTNDArray(), initial=value)
 
             providers[pvname] = pv

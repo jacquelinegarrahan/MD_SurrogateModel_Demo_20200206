@@ -1,7 +1,7 @@
 import copy
 import functools
 from p4p.nt.ndarray import ntndarray as NTNDArrayData
-from online_model import REDUNDANT_INPUT_OUTPUT, PROTOCOL, IMAGE_PVS
+from online_model import REDUNDANT_INPUT_OUTPUT, PROTOCOL, ARRAY_PVS
 
 # Some input/output variables have the same name and must be unique.
 # Below are utility functions to fix this:
@@ -36,14 +36,14 @@ def format_outputs_by_protocol(f):
         rebuilt_output = {}
         if PROTOCOL == "ca":
             for pv, value in output_state.items():
-                if pv in IMAGE_PVS:
+                if pv in ARRAY_PVS:
                     rebuilt_output[f"{pv}.ArrayData_RBV"] = value.flatten()
                 else:
                     rebuilt_output[pv] = value
 
         elif PROTOCOL == "pva":
             for pv, value in output_state.items():
-                if pv in IMAGE_PVS:
+                if pv in ARRAY_PVS:
                     # populate image data
                     array_data = value.view(NTNDArrayData)
 
