@@ -8,6 +8,7 @@ from p4p.server.thread import SharedPV
 from p4p.server import Server
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
+from online_model import IMAGE_PVS, DEFAULT_COLOR_MODE
 
 
 class ModelLoader(threading.local):
@@ -79,27 +80,26 @@ class InputHandler:
         output_pv_state = model_loader.model.run(input_pvs)
 
         # now update output variables
-        for pv_item, value in output_pv_state.items():
-            output_provider = providers[f"{self.prefix}:{pv_item}"]
+        for pv, value in output_pv_state.items():
+            output_provider = providers[f"{self.prefix}:{pv}"]
 
-            if isinstance(value, (np.ndarray,)):
-                image_array = value[6:].reshape((50, 50))
+            if pv not in IMAGE_PVS:
+                output_provider.post(value)
+
+            elif pv in IMAGE_PVS:
+                image_array = output_pv_state[pv]
 
                 # populate image data
                 array_data = image_array.view(NTNDArrayData)
 
                 # get dw and dh from model output
                 array_data.attrib = {
-                    "ColorMode": 0,
-                    "dw": value[3] - value[2],
-                    "dh": value[5] - value[4],
+                    "ColorMode": DEFAULT_COLOR_MODE,
+                    "dw": output_pv_state[f"{pv}.dw"],
+                    "dh": output_pv_state[f"{pv}.dh"],
                 }
 
                 output_provider.post(array_data)
-
-            else:
-
-                output_provider.post(value)
 
         # mark server operation as complete
         op.done()
@@ -194,27 +194,26 @@ class PVAServer:
 
             # use default handler for the output process variables
             # updates to output pvs are handled from post calls within the input update
-            # processing
-            if isinstance(starting_output[out_pv], (float,)):
-                pv = SharedPV(nt=NTScalar("d"), initial=starting_output[out_pv])
+            for pv, value in starting_output.items():
+                if pv not in IMAGE_PVS:
+                    pv = SharedPV(nt=NTScalar(), initial=value)
 
-            elif isinstance(starting_output[out_pv], (np.ndarray,)):
-                # reshape output
-                # should probably be moved into the surrogate model code rather than
-                # being done here
-                image_array = starting_output[out_pv][6:].reshape((50, 50))
+                elif pv in IMAGE_PVS:
+                    image_array = starting_output[pv]
 
-                # populate image data
-                array_data = image_array.view(NTNDArrayData)
+                    # populate image data
+                    array_data = image_array.view(NTNDArrayData)
 
-                # get dw and dh from model output
-                array_data.attrib = {
-                    "ColorMode": 0,
-                    "dw": starting_output[out_pv][3] - starting_output[out_pv][2],
-                    "dh": starting_output[out_pv][5] - starting_output[out_pv][4],
-                }
+                    # get dw and dh from model output
+                    array_data.attrib = {
+                        "ColorMode": DEFAULT_COLOR_MODE,
+                        "dw": starting_output[f"{pv}.dw"],
+                        "dh": starting_output[f"{pv}.dh"],
+                    }
 
-                pv = SharedPV(nt=NTNDArray(), initial=array_data)
+                    pv = SharedPV(nt=NTNDArray(), initial=array_data)
+
+                providers[pvname] = pv
 
             else:
                 pass  # throw exception for incorrect data type
