@@ -248,7 +248,7 @@ Example Usage:
         extents = list(predicted_output["extents"][0])
 
         output["x:y"] = predicted_output["image"].reshape((self.bins[0], self.bins[1]))
-        output["x:y.dw"] = extents[1] - extents[0]
-        output["x:y.dh"] = extents[3] - extents[2]
+        output["x:y:dw"] = extents[1] - extents[0]
+        output["x:y:dh"] = extents[3] - extents[2]
 
         return output
