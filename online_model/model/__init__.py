@@ -43,7 +43,7 @@ def format_outputs_by_protocol(f):
         if PROTOCOL == "ca":
             for pv, value in output_state.items():
                 if pv in ARRAY_PVS:
-                    rebuilt_output[f"{pv}.ArrayData_RBV"] = value.flatten()
+                    rebuilt_output[f"{pv}:ArrayData_RBV"] = value.flatten()
                 else:
                     rebuilt_output[pv] = value
 
@@ -56,8 +56,8 @@ def format_outputs_by_protocol(f):
                     # get dw and dh from model output
                     array_data.attrib = {
                         # "ColorMode": DEFAULT_COLOR_MODE,
-                        "dw": output_state[f"{pv}.dw"],
-                        "dh": output_state[f"{pv}.dh"],
+                        "dw": output_state[f"{pv}:dw"],
+                        "dh": output_state[f"{pv}:dh"],
                     }
                     rebuilt_output[pv] = array_data
 
