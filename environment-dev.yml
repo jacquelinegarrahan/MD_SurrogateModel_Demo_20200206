@@ -10,8 +10,11 @@ dependencies:
   - bokeh::jupyter_bokeh
   - conda-forge::notebook
   - h5py
+  - h5netcdf
+  - xarray
   - bokeh
   - click
+  - pint
   - black
   - pre-commit
   - pip
