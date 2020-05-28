@@ -40,11 +40,6 @@ def build_image_pvs(pvname, image_shape, image_units, precision, color_mode):
             "units": image_units,
         },
         f"{pvname}:ColorMode_RBV": {"type": "int", "value": color_mode},
-        f"{pvname}:AttributeList": {
-            "type": "string",
-            "value": ["dw", "dh"],
-            "count": 2,
-        },
         f"{pvname}:dw": {"type": "float", "prec": precision},
         f"{pvname}:dh": {"type": "float", "prec": precision},
     }
