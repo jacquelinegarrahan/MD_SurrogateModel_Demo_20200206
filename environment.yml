@@ -11,7 +11,10 @@ dependencies:
   - conda-forge::notebook
   - anaconda::ipykernel
   - h5py
+  - h5netcdf
+  - xarray
   - bokeh
+  - pint
   - click
   - pip
   - pip:
