@@ -6,10 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from online_model.model.surrogate_model import SurrogateModel
-from online_model.model import (
-    apply_temporary_ordering_patch,
-    format_outputs_by_protocol,
-)
+from online_model.model import apply_temporary_ordering_patch
 
 
 class MySurrogateModel(SurrogateModel):
@@ -219,7 +216,6 @@ Example Usage:
             print("Output Generated")
         return random_eval_output
 
-    @format_outputs_by_protocol
     def prepare_outputs(self, predicted_output):
         """
         Prepares the model outputs to be served so no additional

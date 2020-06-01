@@ -7,6 +7,31 @@ from epics import caget
 from pcaspy import Driver, SimpleServer
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
+from online_model import ARRAY_PVS
+
+
+def format_model_output(model_output):
+    """
+    Reformat model for ca server compatibility.
+
+    Parameters
+    ----------
+    model_ouptut: dict
+        Output from the surrogate model.
+
+    Returns
+    -------
+    dict
+        Output with appropriate data label.
+    """
+    rebuilt_output = {}
+    for pv, value in model_output.items():
+        if pv in ARRAY_PVS:
+            rebuilt_output[f"{pv}:ArrayData_RBV"] = value.flatten()
+        else:
+            rebuilt_output[pv] = value
+
+    return rebuilt_output
 
 
 class SimDriver(Driver):
@@ -204,7 +229,7 @@ class CAServer:
         self.input_pv_state = {pv: input_pvdb[pv]["value"] for pv in input_pvdb}
 
         # get starting output from the model and set up output process variables
-        self.output_pv_state = self.model.run(self.input_pv_state)
+        self.output_pv_state = format_model_output(self.model.run(self.input_pv_state))
         self.pvdb.update(output_pvdb)
 
         # initialize channel access server
@@ -226,6 +251,7 @@ class CAServer:
         # Initialize output variables
         print("Initializing sim...")
         output_pv_state = self.model.run(self.input_pv_state)
+        output_pv_state = format_model_output(output_pv_state)
         self.driver.set_output_pvs(output_pv_state)
         print("...finished initializing.")
 
@@ -242,4 +268,5 @@ class CAServer:
 
                 sim_pv_state = copy.deepcopy(self.input_pv_state)
                 model_output = self.model.run(self.input_pv_state)
+                model_output = format_model_output(model_output)
                 self.driver.set_output_pvs(model_output)

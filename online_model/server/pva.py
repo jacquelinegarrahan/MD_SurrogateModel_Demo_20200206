@@ -10,6 +10,41 @@ from online_model.model.surrogate_model import OnlineSurrogateModel
 from online_model import ARRAY_PVS, DEFAULT_COLOR_MODE
 
 
+def format_model_output(model_output):
+    """
+    Reformat model for pva server compatibility.
+
+    Parameters
+    ----------
+    model_ouptut: dict
+        Output from the surrogate model.
+
+    Returns
+    -------
+    dict
+        Output with metadata assigned.
+    """
+    rebuilt_output = {}
+    for pv, value in model_output.items():
+        if pv in ARRAY_PVS:
+            # populate image data
+            array_data = value.view(NTNDArrayData)
+
+            # get dw and dh from model output
+            array_data.attrib = {
+                # "ColorMode": DEFAULT_COLOR_MODE,
+                "dw": output_state[f"{pv}:dw"],
+                "dh": output_state[f"{pv}:dh"],
+            }
+            rebuilt_output[pv] = array_data
+
+        # do not build attribute pvs
+        elif not ".dw" in pv and not ".dh" in pv:
+            rebuilt_output[pv] = value
+
+    return rebuilt_output
+
+
 class ModelLoader(threading.local):
     """
     Subclass of threading.local that will initialize the OnlineSurrogateModel in each \\
@@ -77,6 +112,7 @@ class InputHandler:
 
         # run model using global input process variable state
         output_pv_state = model_loader.model.run(input_pvs)
+        output_pv_state = format_model_output(output_pv_state)
 
         # now update output variables
         for pv, value in output_pv_state.items():
@@ -157,6 +193,7 @@ class PVAServer:
 
         # use main thread loaded model to do initial model run
         starting_output = model_loader.model.run(input_pvs)
+        starting_output = format_model_output(starting_output)
 
         # create PVs for model inputs
         for in_pv in in_pvdb:
