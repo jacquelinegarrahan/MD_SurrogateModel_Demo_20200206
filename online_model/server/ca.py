@@ -7,9 +7,6 @@ from epics import caget
 from pcaspy import Driver, SimpleServer
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS, DEFAULT_PRECISION, DEFAULT_COLOR_MODE
-
-from online_model.util import build_image_pvs
 
 
 class SimDriver(Driver):
