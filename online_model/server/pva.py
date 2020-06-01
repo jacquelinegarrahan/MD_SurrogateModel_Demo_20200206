@@ -161,13 +161,23 @@ class PVAServer:
         # create PVs for model inputs
         for in_pv in in_pvdb:
             pvname = f"{prefix}:{in_pv}"
-            pv = SharedPV(
-                handler=InputHandler(
-                    prefix
-                ),  # Use InputHandler class to handle callbacks
-                nt=NTScalar("d"),
-                initial=in_pvdb[in_pv]["value"],
-            )
+
+            if in_pv not in ARRAY_PVS:
+                pv = SharedPV(
+                    handler=InputHandler(
+                        prefix
+                    ),  # Use InputHandler class to handle callbacks
+                    nt=NTScalar("d"),
+                    initial=in_pvdb[in_pv]["value"],
+                )
+            else:
+                pv = SharedPV(
+                    handler=InputHandler(
+                        prefix
+                    ),  # Use InputHandler class to handle callbacks
+                    nt=NTNDArray(),
+                    initial=in_pvdb[in_pv]["value"],
+                )
             providers[pvname] = pv
 
         # use default handler for the output process variables
@@ -190,4 +200,11 @@ class PVAServer:
         Starts the server and runs until KeyboardInterrupt.
         """
         print("Starting Server...")
-        Server.forever(providers=[providers])
+        self.server = Server.forever(providers=[providers])
+
+    def stop_server(self) -> None:
+        """
+        Stops the server manually.
+        """
+        print("Stopping Server...")
+        self.server.stop()
