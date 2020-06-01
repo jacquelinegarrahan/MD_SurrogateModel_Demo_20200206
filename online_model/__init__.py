@@ -104,6 +104,6 @@ elif PROTOCOL == "ca":
     )
     SIM_PVDB.update(image_pvs)
 
-ARRAY_PVS = ["x:y"]
+ARRAY_PVS = ["x:y", "image"]
 
 MODEL_KWARGS = {"model_file": MODEL_FILE, "stock_image_input": DEFAULT_LASER_IMAGE}
