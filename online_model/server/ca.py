@@ -231,7 +231,6 @@ class CAServer:
         # get starting output from the model and set up output process variables
         self.output_pv_state = self.model.run(self.input_pv_state)
         self.output_pv_state = format_model_output(self.output_pv_state)
-        print(output_pvdb)
         self.pvdb.update(output_pvdb)
 
         # initialize channel access server
