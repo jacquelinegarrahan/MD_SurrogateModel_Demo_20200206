@@ -5,6 +5,7 @@ from typing import Dict
 from p4p.nt import NTScalar, NTNDArray
 from p4p.server.thread import SharedPV
 from p4p.server import Server
+from p4p.nt.ndarray import ntndarray as NTNDArrayData
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
 from online_model import ARRAY_PVS, DEFAULT_COLOR_MODE
@@ -33,8 +34,8 @@ def format_model_output(model_output):
             # get dw and dh from model output
             array_data.attrib = {
                 # "ColorMode": DEFAULT_COLOR_MODE,
-                "dw": output_state[f"{pv}:dw"],
-                "dh": output_state[f"{pv}:dh"],
+                "dw": model_output[f"{pv}:dw"],
+                "dh": model_output[f"{pv}:dh"],
             }
             rebuilt_output[pv] = array_data
 

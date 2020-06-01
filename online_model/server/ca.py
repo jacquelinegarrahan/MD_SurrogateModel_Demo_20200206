@@ -229,7 +229,9 @@ class CAServer:
         self.input_pv_state = {pv: input_pvdb[pv]["value"] for pv in input_pvdb}
 
         # get starting output from the model and set up output process variables
-        self.output_pv_state = format_model_output(self.model.run(self.input_pv_state))
+        self.output_pv_state = self.model.run(self.input_pv_state)
+        self.output_pv_state = format_model_output(self.output_pv_state)
+        print(output_pvdb)
         self.pvdb.update(output_pvdb)
 
         # initialize channel access server
@@ -255,18 +257,28 @@ class CAServer:
         self.driver.set_output_pvs(output_pv_state)
         print("...finished initializing.")
 
-        while True:
-            # process channel access transactions
-            self.server.process(0.1)
+        try:
+            while True:
+                # process channel access transactions
+                self.server.process(0.1)
 
-            # check if the input process variable state has been updated as
-            # an indicator of new input values
-            while not all(
-                np.array_equal(sim_pv_state[key], self.input_pv_state[key])
-                for key in self.input_pv_state
-            ):
+                # check if the input process variable state has been updated as
+                # an indicator of new input values
+                while not all(
+                    np.array_equal(sim_pv_state[key], self.input_pv_state[key])
+                    for key in self.input_pv_state
+                ):
 
-                sim_pv_state = copy.deepcopy(self.input_pv_state)
-                model_output = self.model.run(self.input_pv_state)
-                model_output = format_model_output(model_output)
-                self.driver.set_output_pvs(model_output)
+                    sim_pv_state = copy.deepcopy(self.input_pv_state)
+                    model_output = self.model.run(self.input_pv_state)
+                    model_output = format_model_output(model_output)
+                    self.driver.set_output_pvs(model_output)
+
+        except KeyboardInterrupt:
+            print("Terminating server.")
+
+    def stop_server(self) -> None:
+        """
+        Stop the channel access server.
+        """
+        self.server.stop()
