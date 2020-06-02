@@ -23,9 +23,16 @@ Open two terminal windows and three internet browser tabs/windows. In each termi
 
 In the first terminal, type (replacing `protocol` with `pva` for PVAccess and `ca` for Channel Access):
 
+Using the pydantic variables:
 ```
-$ python bin/cli.py serve start-server {protocol}
+$ python bin/cli.py serve start-server pva online_model/files/pydantic_variables.pickle
 ```
+Or using xarray:
+```
+$ python bin/cli.py serve start-server pva online_model/files/xarray_dset.pickle --from-xarray
+```
+
+
 In the other terminal:
 
 ```
