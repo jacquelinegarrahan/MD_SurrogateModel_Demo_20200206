@@ -45,7 +45,7 @@ class ProcessVariable(BaseModel):
     io_type: IOEnum  # requires selection of input or output for creation
     # defaults for pvdb
     type: str = "float"
-    precision: int = DEFAULT_PRECISION
+    precision: int = 8
 
     class Config:
         use_enum_values = True
@@ -63,3 +63,8 @@ class NDProcessVariable(ProcessVariable):
     default: Optional[NumpyNDArray]
     range: Optional[Union[NumpyNDArray, XarrayDataArray]]
     units: str
+
+
+class ImageProcessVariable(NDProcessVariable):
+    color_mode: int = 0
+    shape: tuple  # need for channel access AreaDetector

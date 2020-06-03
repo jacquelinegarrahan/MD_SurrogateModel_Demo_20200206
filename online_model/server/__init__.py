@@ -1,10 +1,12 @@
-from online_model.server import ca, pva
 import pickle
 import xarray as xr
 from typing import Union
+from online_model.server import ca, pva
+from online_model.model.variables import ImageProcessVariable
+from online_model.util import build_image_pvs
 
 
-def pvdb_from_xarray(dset):
+def pvdb_from_xarray(dset, protocol):
     input_pvdb = {}
     output_pvdb = {}
 
@@ -36,7 +38,7 @@ def pvdb_from_xarray(dset):
     return input_pvdb, output_pvdb
 
 
-def pvdb_from_classes(variables):
+def pvdb_from_classes(variables, protocol):
     input_pvdb = {}
     output_pvdb = {}
 
@@ -44,15 +46,31 @@ def pvdb_from_classes(variables):
         # no manual formatting needed and have control over what is included/excluded
         entry = variable.dict(exclude_unset=True, exclude={"io_type"})
 
-        if variable.io_type == "input":
-            input_pvdb[variable.name] = entry
+        if protocol == "ca" and isinstance(variable, (ImageProcessVariable,)):
+            image_pvs = build_image_pvs(
+                variable.name,
+                variable.shape,
+                variable.units,
+                variable.precision,
+                variable.color_mode,
+            )
 
-        elif variable.io_type == "output":
-            output_pvdb[variable.name] = entry
+            if variable.io_type == "input":
+                input_pvdb.update(image_pvs)
+
+            elif variable.io_type == "output":
+                output_pvdb.update(image_pvs)
 
         else:
-            # pydantic enum validation will prohibit any other assignment
-            pass
+            if variable.io_type == "input":
+                input_pvdb[variable.name] = entry
+
+            elif variable.io_type == "output":
+                output_pvdb[variable.name] = entry
+
+            else:
+                # pydantic enum validation will prohibit any other assignment
+                pass
 
     return input_pvdb, output_pvdb
 
@@ -69,10 +87,10 @@ def get_server(
     pickled_data = open(data_file, "rb")
     data = pickle.load(pickled_data)
     if from_xarray:
-        input_pvdb, output_pvdb = pvdb_from_xarray(data)
+        input_pvdb, output_pvdb = pvdb_from_xarray(data, protocol)
 
     else:
-        input_pvdb, output_pvdb = pvdb_from_classes(data)
+        input_pvdb, output_pvdb = pvdb_from_classes(data, protocol)
 
     if protocol == "ca":
         server = ca.CAServer(model_class, model_kwargs, input_pvdb, output_pvdb, prefix)
