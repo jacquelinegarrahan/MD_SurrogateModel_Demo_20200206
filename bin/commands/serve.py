@@ -1,5 +1,6 @@
 import click
 import os
+import numpy as np
 
 
 @click.group()
@@ -17,11 +18,19 @@ def start_server(protocol: str, data_file: str, from_xarray: bool):
 
     PROTOCOL options are 'ca' and 'pva'
     """
-    os.environ["PROTOCOL"] = "pva"
 
     from online_model import server
     from online_model.model.MySurrogateModel import MySurrogateModel
-    from online_model import MODEL_KWARGS, PREFIX
+
+    PREFIX = "smvm"
+
+    MODEL_FILE = "online_model/files/CNN_051620_SurrogateModel.h5"
+    STOCK_LASER_IMAGE = "online_model/files/example_input_image.npy"
+
+    MODEL_KWARGS = {
+        "model_file": MODEL_FILE,
+        "stock_image_input": np.load(STOCK_LASER_IMAGE),
+    }
 
     pv_server = server.get_server(
         PREFIX, MySurrogateModel, MODEL_KWARGS, protocol, data_file, from_xarray

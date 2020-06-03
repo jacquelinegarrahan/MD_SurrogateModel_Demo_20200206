@@ -4,7 +4,6 @@ from typing import Union, List
 from bokeh.models import Slider
 
 from online_model.app.controllers import Controller
-from online_model import ARRAY_PVS, EXCLUDE_SLIDERS
 
 
 def set_pv_from_slider(

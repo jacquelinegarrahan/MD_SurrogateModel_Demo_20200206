@@ -20,6 +20,8 @@ from online_model import ARRAY_PVS
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
 # sliders to exclude
+# TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
+REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
 EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
 
 # server prefix
@@ -39,7 +41,7 @@ pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
 # set up plot
-image_plot = ImagePlot(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
+image_plot = ImagePlot(PLOT_PVDB, controller, PREFIX)
 image_plot.build_plot(pal)
 
 # set current_pv globally

@@ -46,7 +46,6 @@ class Controller:
 
         """
         if self.protocol == "ca":
-            breakpoint()
             return caget(pvname)
 
         elif self.protocol == "pva":
