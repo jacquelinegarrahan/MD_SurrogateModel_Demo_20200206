@@ -14,10 +14,15 @@ from online_model.app.controllers import Controller
 from online_model.app.widgets.sliders import build_sliders
 from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
-from online_model import PREFIX, EXCLUDE_SLIDERS, PROTOCOL
 from online_model.app import parse_args
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
+
+# sliders to exclude
+EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
+
+# server prefix
+PREFIX = "smvm"
 
 # exclude channel access data items from plots
 PLOT_PVDB = {

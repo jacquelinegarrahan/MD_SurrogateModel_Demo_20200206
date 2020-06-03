@@ -14,6 +14,9 @@ from online_model.app import parse_args
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
+# server prefix
+PREFIX = "smvm"
+
 # exclude channel access data items from plots
 PLOT_PVDB = {
     item: value for item, value in SIM_PVDB.items() if "units" in SIM_PVDB[item]

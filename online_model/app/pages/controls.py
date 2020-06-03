@@ -11,6 +11,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 from online_model.app.widgets.sliders import build_sliders
 from online_model.app.controllers import Controller
 
+# server prefix
+PREFIX = "smvm"
+
 PROTOCOL, CMD_PVDB, _ = parse_args()
 
 

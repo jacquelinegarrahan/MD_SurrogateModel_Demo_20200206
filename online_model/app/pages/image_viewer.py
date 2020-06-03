@@ -17,6 +17,8 @@ from online_model.app import parse_args
 
 PROTOCOL, _, SIM_PVDB = parse_args()
 
+# server prefix
+PREFIX = "smvm"
 
 # exclude channel access data items from plots
 PLOT_PVDB = {

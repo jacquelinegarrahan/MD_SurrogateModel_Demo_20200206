@@ -1,6 +1,9 @@
 import copy
 import functools
-from online_model import REDUNDANT_INPUT_OUTPUT, PROTOCOL, ARRAY_PVS
+
+# TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
+REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
+
 
 # Some input/output variables have the same name and must be unique.
 # Below are utility functions to fix this:

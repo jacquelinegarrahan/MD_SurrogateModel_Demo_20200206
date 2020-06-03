@@ -37,7 +37,6 @@ def parse_args():
     parser.add_argument(
         "-f",
         "--file",
-        metavar="file",
         nargs=1,
         type=str,
         help="Data file to load variables.",
