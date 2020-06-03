@@ -43,7 +43,6 @@ class IOEnum(str, Enum):
 class ProcessVariable(BaseModel):
     name: str
     io_type: IOEnum  # requires selection of input or output for creation
-    units: Optional[str]
     # defaults for pvdb
     type: str = "float"
     precision: int = DEFAULT_PRECISION
@@ -56,9 +55,11 @@ class ScalarProcessVariable(ProcessVariable):
     value: Optional[float]
     default: Optional[float]
     range: Optional[Union[NumpyNDArray, XarrayDataArray]]
+    units: Optional[str]
 
 
 class NDProcessVariable(ProcessVariable):
     value: Optional[NumpyNDArray]
     default: Optional[NumpyNDArray]
     range: Optional[Union[NumpyNDArray, XarrayDataArray]]
+    units: str
