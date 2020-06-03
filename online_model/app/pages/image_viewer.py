@@ -10,9 +10,13 @@ from bokeh import palettes
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
-from online_model import PREFIX, SIM_PVDB, PROTOCOL
+from online_model import PREFIX
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import ImagePlot
+from online_model.app import parse_args
+
+PROTOCOL, _, SIM_PVDB = parse_args()
+
 
 # exclude channel access data items from plots
 PLOT_PVDB = {

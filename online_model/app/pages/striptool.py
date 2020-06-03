@@ -10,7 +10,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import Striptool
-from online_model import SIM_PVDB, PROTOCOL
+from online_model.app import parse_args
+
+PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
 # exclude channel access data items from plots
 PLOT_PVDB = {

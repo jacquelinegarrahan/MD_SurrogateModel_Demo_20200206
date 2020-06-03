@@ -10,7 +10,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
 from online_model.app.widgets.sliders import build_sliders
 from online_model.app.controllers import Controller
-from online_model import CMD_PVDB, PROTOCOL
+
+PROTOCOL, CMD_PVDB, _ = parse_args()
+
 
 # create controller
 controller = Controller(PROTOCOL)
