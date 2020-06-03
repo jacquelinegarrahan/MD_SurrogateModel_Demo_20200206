@@ -4,7 +4,6 @@ import numpy as np
 from typing import List, Dict, Tuple
 
 from online_model.app.controllers import Controller
-from online_model import PREFIX, ARRAY_PVS
 
 
 DEFAULT_IMAGE_DATA = {

@@ -5,7 +5,6 @@ from bokeh.models import ColumnDataSource
 
 from online_model.app.controllers import Controller
 from online_model.app.monitors import PVImage, PVTimeSeries
-from online_model import PREFIX, ARRAY_PVS
 
 
 class ImagePlot:
@@ -31,7 +30,7 @@ class ImagePlot:
 
     """
 
-    def __init__(self, sim_pvdb: dict, controller: Controller) -> None:
+    def __init__(self, sim_pvdb: dict, controller: Controller, prefix: str) -> None:
         """
         Initialize monitors, current process variable, and data source.
 
@@ -49,7 +48,7 @@ class ImagePlot:
         for opv in sim_pvdb:
             if len(sim_pvdb[opv]["units"].split(":")) == 2:
                 self.pv_monitors[opv] = PVImage(
-                    f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller
+                    f"{prefix}:{opv}", sim_pvdb[opv]["units"], controller
                 )
 
         self.current_pv = list(self.pv_monitors.keys())[0]
@@ -137,7 +136,7 @@ class Striptool:
     """
 
     def __init__(
-        self, sim_pvdb: dict, controller: Controller, array_pvs: List[str] = ARRAY_PVS
+        self, sim_pvdb: dict, controller: Controller, array_pvs: List[str], prefix: str
     ) -> None:
         """
         Initialize monitors, current process variable, and data source.
@@ -165,7 +164,7 @@ class Striptool:
         for opv in sim_pvdb:
             if opv not in array_pvs:
                 self.pv_monitors[opv] = PVTimeSeries(
-                    f"{PREFIX}:{opv}", sim_pvdb[opv]["units"], controller
+                    f"{prefix}:{opv}", sim_pvdb[opv]["units"], controller
                 )
 
         self.current_pv = list(self.pv_monitors.keys())[0]

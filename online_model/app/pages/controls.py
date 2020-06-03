@@ -17,11 +17,17 @@ PREFIX = "smvm"
 PROTOCOL, CMD_PVDB, _ = parse_args()
 
 
+# TEMPORARILY EXCLUDE THE EXTENTS
+sliders_to_render = {}
+for var, value in CMD_PVDB.items():
+    if "in_" not in var:
+        sliders_to_render[var] = value
+
 # create controller
 controller = Controller(PROTOCOL)
 
 # build sliders for the command process variable database
-sliders = build_sliders(CMD_PVDB, controller)
+sliders = build_sliders(sliders_to_render, controller, PREFIX)
 scol = column(sliders, width=350)
 
 curdoc().add_root(row(scol))

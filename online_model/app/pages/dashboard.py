@@ -15,6 +15,7 @@ from online_model.app.widgets.sliders import build_sliders
 from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
 from online_model.app import parse_args
+from online_model import ARRAY_PVS
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
@@ -38,7 +39,7 @@ pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
 # set up plot
-image_plot = ImagePlot(PLOT_PVDB, controller)
+image_plot = ImagePlot(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
 image_plot.build_plot(pal)
 
 # set current_pv globally
@@ -78,11 +79,11 @@ for var, value in CMD_PVDB.items():
     if "in_" not in var:
         sliders_to_render[var] = value
 
-sliders = build_sliders(CMD_PVDB, controller)
+sliders = build_sliders(sliders_to_render, controller, PREFIX)
 slider_col = column(sliders, width=350)
 
 # Set up the striptool
-striptool = Striptool(PLOT_PVDB, controller)
+striptool = Striptool(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
 striptool.build_plot()
 
 # set up global pv
@@ -112,7 +113,7 @@ def striptool_update_callback():
 
 
 # add table
-value_table = ValueTable(PLOT_PVDB, controller)
+value_table = ValueTable(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
 
 # Set up table update callback
 def table_update_callback():

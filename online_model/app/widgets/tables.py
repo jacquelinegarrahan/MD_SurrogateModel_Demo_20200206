@@ -4,12 +4,11 @@ from bokeh.models import ColumnDataSource, DataTable, TableColumn, StringFormatt
 
 from online_model.app.controllers import Controller
 from online_model.app.monitors import PVScalar
-from online_model import PREFIX, ARRAY_PVS
 
 
 class ValueTable:
     def __init__(
-        self, sim_pvdb, controller: Controller, array_pvs: List[str] = ARRAY_PVS
+        self, sim_pvdb, controller: Controller, array_pvs: List[str], prefix: str
     ) -> None:
         """
         View for value table item. Maps process variable name to its value.
@@ -42,7 +41,7 @@ class ValueTable:
         for pv in sim_pvdb:
             if pv not in array_pvs:
                 self.pv_monitors[pv] = PVScalar(
-                    f"{PREFIX}:{pv}", sim_pvdb[pv]["units"], controller
+                    f"{prefix}:{pv}", sim_pvdb[pv]["units"], controller
                 )
                 v = self.pv_monitors[pv].poll()
 

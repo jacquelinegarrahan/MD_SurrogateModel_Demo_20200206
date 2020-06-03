@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import Striptool
 from online_model.app import parse_args
+from online_model import ARRAY_PVS
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
@@ -26,7 +27,7 @@ PLOT_PVDB = {
 controller = Controller(PROTOCOL)
 
 # Set up the controller for the plot
-striptool = Striptool(PLOT_PVDB, controller)
+striptool = Striptool(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
 striptool.build_plot()
 current_pv = striptool.current_pv
 

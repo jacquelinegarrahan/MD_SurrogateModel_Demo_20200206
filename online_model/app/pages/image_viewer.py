@@ -10,7 +10,6 @@ from bokeh import palettes
 # fix for bokeh path error, maybe theres a better way to do this
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 
-from online_model import PREFIX
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import ImagePlot
 from online_model.app import parse_args
@@ -34,7 +33,7 @@ pal = ["#FFFFFF"] * 12 + pal
 pal = tuple(pal)
 
 # set up plot
-image_plot = ImagePlot(PLOT_PVDB, controller)
+image_plot = ImagePlot(PLOT_PVDB, controller, PREFIX)
 image_plot.build_plot(pal)
 
 # set current_pv globally
