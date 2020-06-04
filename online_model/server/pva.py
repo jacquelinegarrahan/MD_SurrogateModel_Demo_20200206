@@ -8,7 +8,7 @@ from p4p.server import Server
 from p4p.nt.ndarray import ntndarray as NTNDArrayData
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS, DEFAULT_COLOR_MODE
+from online_model import ARRAY_PVS
 
 
 def format_model_output(model_output):
@@ -33,7 +33,6 @@ def format_model_output(model_output):
 
             # get dw and dh from model output
             array_data.attrib = {
-                # "ColorMode": DEFAULT_COLOR_MODE,
                 "dw": model_output[f"{pv}:dw"],
                 "dh": model_output[f"{pv}:dh"],
             }

@@ -3,7 +3,6 @@ import xarray as xr
 from enum import Enum
 from typing import Any, List, Union, Optional
 from pydantic import BaseModel
-from online_model import DEFAULT_PRECISION
 
 # custom validator for ndarrays
 class NumpyNDArray(np.ndarray):
