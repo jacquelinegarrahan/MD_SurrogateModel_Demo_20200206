@@ -7,15 +7,15 @@ from online_model.server import pvdb_from_xarray
 import pickle
 
 
-def load_data(data_file, from_xarray):
+def load_data(data_file, from_xarray, protocol):
     pickled_data = open(data_file, "rb")
     data = pickle.load(pickled_data)
 
     if from_xarray:
-        input_pvdb, output_pvdb = pvdb_from_xarray(data)
+        input_pvdb, output_pvdb = pvdb_from_xarray(data, protocol)
 
     else:
-        input_pvdb, output_pvdb = pvdb_from_classes(data)
+        input_pvdb, output_pvdb = pvdb_from_classes(data, protocol)
 
     return input_pvdb, output_pvdb
 
@@ -48,6 +48,6 @@ def parse_args():
     protocol = args.protocol[0]
     data_file = args.file[0]
     from_xarray = args.from_xarray
-    input_pvdb, output_pvdb = load_data(data_file, from_xarray)
+    input_pvdb, output_pvdb = load_data(data_file, from_xarray, protocol)
 
     return protocol, input_pvdb, output_pvdb
