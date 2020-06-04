@@ -228,5 +228,11 @@ VARIABLES = {
         "xarray_dim": ("m",),
         "is_input": 0,
     },
-    "x:y": {"pv_type": "image", "xarray_dim": (), "is_input": 0, "units": "mm:mm"},
+    "x:y": {
+        "pv_type": "image",
+        "xarray_dim": (),
+        "is_input": 0,
+        "units": "mm:mm",
+        "shape": (50, 50),
+    },
 }
