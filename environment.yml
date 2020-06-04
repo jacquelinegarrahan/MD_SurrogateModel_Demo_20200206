@@ -1,7 +1,7 @@
 name: online-surrogate-model-dev
 dependencies:
   - python=3.7
-  - epics-base=7.0.3.1
+  - epics-base=7.0.4
   - conda-forge::pcaspy=0.7.2
   - scikit-learn=0.21.3
   - conda-forge::pyepics
@@ -12,6 +12,7 @@ dependencies:
   - anaconda::ipykernel
   - h5py
   - h5netcdf
+  - pydantic
   - xarray
   - bokeh
   - pint
