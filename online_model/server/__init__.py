@@ -19,21 +19,39 @@ def pvdb_from_xarray(dset, protocol):
             "type": "float",  # For channel access
         }
 
-        if dset[variable].attrs["is_input"]:
+        # set up area detector pvs
+        if protocol == "ca" and dset[variable].attrs["pv_type"] == "image":
+            image_pvs = build_image_pvs(
+                variable,
+                dset[variable].attrs["shape"],
+                dset[variable].attrs["units"],
+                dset[variable].attrs["precision"],
+                dset[variable].attrs["color_mode"],
+            )
 
-            # set values for the inputs
-            if dset[variable].attrs["pv_type"] == "scalar":
-                entry["value"] = dset[variable].values[
-                    0
-                ]  # Have to extract our scalar value from the xarray
+            if dset[variable].attrs["is_input"] == 1:
+                input_pvdb.update(image_pvs)
 
-            else:
-                entry["value"] = dset[variable]
-
-            input_pvdb[variable] = entry
+            elif dset[variable].attrs["is_input"] == 0:
+                output_pvdb.update(image_pvs)
 
         else:
-            output_pvdb[variable] = entry
+
+            if dset[variable].attrs["is_input"]:
+
+                # set values for the inputs
+                if dset[variable].attrs["pv_type"] == "scalar":
+                    entry["value"] = dset[variable].values[
+                        0
+                    ]  # Have to extract our scalar value from the xarray
+
+                else:
+                    entry["value"] = dset[variable]
+
+                input_pvdb[variable] = entry
+
+            else:
+                output_pvdb[variable] = entry
 
     return input_pvdb, output_pvdb
 
