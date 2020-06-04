@@ -234,5 +234,6 @@ VARIABLES = {
         "is_input": 0,
         "units": "mm:mm",
         "shape": (50, 50),
+        "color_mode": 0,
     },
 }
