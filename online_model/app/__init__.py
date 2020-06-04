@@ -42,7 +42,8 @@ def parse_args():
         help="Data file to load variables.",
         required=True,
     )
-    parser.add_argument("--from-xarray", type=bool, default=False)
+    parser.add_argument("--from-xarray", default=False, action="store_true")
+    parser.add_argument("--not-xarray", dest="from-xarray", action="store_false")
     args = parser.parse_args()
 
     protocol = args.protocol[0]
