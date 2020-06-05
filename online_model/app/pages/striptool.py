@@ -17,7 +17,6 @@ epics.ca.initialize_libca()
 from online_model.app.controllers import Controller
 from online_model.app.widgets.plots import Striptool
 from online_model.app import parse_args
-from online_model import ARRAY_PVS
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 ARRAY_PVS = ["x:y"]

@@ -21,14 +21,16 @@ from online_model.app.widgets.sliders import build_sliders
 from online_model.app.widgets.plots import ImagePlot, Striptool
 from online_model.app.widgets.tables import ValueTable
 from online_model.app import parse_args
-from online_model import ARRAY_PVS
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 
-# sliders to exclude
 # TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
 REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
+
+# sliders to exclude
 EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
+
+#  array pvs to pass
 ARRAY_PVS = ["x:y"]
 
 
