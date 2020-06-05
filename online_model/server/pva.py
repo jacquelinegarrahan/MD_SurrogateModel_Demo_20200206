@@ -19,6 +19,9 @@ def format_model_output(model_output, image_pvs):
     model_ouptut: dict
         Output from the surrogate model.
 
+    image_pvs: list
+        List of pvs to format with image attributes
+
     Returns
     -------
     dict
@@ -26,7 +29,7 @@ def format_model_output(model_output, image_pvs):
     """
     rebuilt_output = {}
     for pv, value in model_output.items():
-        if pv in ARRAY_PVS:
+        if pv in image_pvs:
             # populate image data
             array_data = value.view(NTNDArrayData)
 
@@ -83,8 +86,19 @@ class InputHandler:
     process variables.
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str, image_pvs: List[str]):
+        """
+        Initialize the handler with prefix and image pv attributes
+
+        prefix: str
+            prefix used to format pvs
+
+        image_pvs: list
+            List of image process variables to format
+
+        """
         self.prefix = prefix
+        self.image_pvs = image_pvs
 
     def put(self, pv, op) -> None:
         """
@@ -111,7 +125,7 @@ class InputHandler:
 
         # run model using global input process variable state
         output_pv_state = model_loader.model.run(input_pvs)
-        output_pv_state = format_model_output(output_pv_state)
+        output_pv_state = format_model_output(output_pv_state, self.image_pvs)
 
         # now update output variables
         for pv, value in output_pv_state.items():
@@ -196,7 +210,9 @@ class PVAServer:
 
         # use main thread loaded model to do initial model run
         starting_output = model_loader.model.run(input_pvs)
-        starting_output = format_model_output(starting_output)
+
+        # in this case, the array pvs are the image pvs
+        starting_output = format_model_output(starting_output, array_pvs)
 
         # create PVs for model inputs
         for in_pv in in_pvdb:
@@ -205,7 +221,7 @@ class PVAServer:
             if in_pv not in array_pvs:
                 pv = SharedPV(
                     handler=InputHandler(
-                        prefix
+                        prefix, array_pvs
                     ),  # Use InputHandler class to handle callbacks
                     nt=NTScalar("d"),
                     initial=in_pvdb[in_pv]["value"],
@@ -213,7 +229,7 @@ class PVAServer:
             else:
                 pv = SharedPV(
                     handler=InputHandler(
-                        prefix
+                        prefix, array_pvs
                     ),  # Use InputHandler class to handle callbacks
                     nt=NTNDArray(),
                     initial=in_pvdb[in_pv]["value"],

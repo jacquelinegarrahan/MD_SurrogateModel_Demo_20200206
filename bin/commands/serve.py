@@ -34,6 +34,12 @@ def start_server(protocol: str, data_file: str, from_xarray: bool):
     }
 
     pv_server = server.get_server(
-        PREFIX, MySurrogateModel, MODEL_KWARGS, protocol, data_file, from_xarray
+        PREFIX,
+        MySurrogateModel,
+        MODEL_KWARGS,
+        protocol,
+        data_file,
+        from_xarray,
+        ARRAY_PVS,
     )
     pv_server.start_server()

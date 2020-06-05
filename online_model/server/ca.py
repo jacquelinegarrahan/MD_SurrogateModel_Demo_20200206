@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 import random
-from typing import Dict, Mapping, Union
+from typing import Dict, Mapping, Union, List
 
 from epics import caget
 from pcaspy import Driver, SimpleServer
@@ -9,7 +9,7 @@ from pcaspy import Driver, SimpleServer
 from online_model.model.surrogate_model import OnlineSurrogateModel
 
 
-def format_model_output(model_output):
+def format_model_output(model_output, image_pvs):
     """
     Reformat model for ca server compatibility.
 
@@ -25,7 +25,7 @@ def format_model_output(model_output):
     """
     rebuilt_output = {}
     for pv, value in model_output.items():
-        if pv in ARRAY_PVS:
+        if pv in image_pvs:
             rebuilt_output[f"{pv}:ArrayData_RBV"] = value.flatten()
         else:
             rebuilt_output[pv] = value
@@ -193,6 +193,7 @@ class CAServer:
         input_pvdb: Dict[str, dict],
         output_pvdb: Dict[str, dict],
         prefix: str,
+        array_pvs: List[str],
     ) -> None:
         """
         Create OnlineSurrogateModel instance and initialize output variables by running \\
@@ -216,9 +217,17 @@ class CAServer:
             Dictionary that maps the output process variable string to type (str), prec \\
             (precision), value (float), units (str), range (List[float])
 
+        prefix: str
+            Prefix used to format process variables
+
+        array_pvs: list
+            List of image pvs that need to be served
+
+
         """
         surrogate_model = model_class(**model_kwargs)
         self.model = OnlineSurrogateModel([surrogate_model])
+        self.array_pvs = array_pvs
 
         # set up db for initializing process variables
         self.pvdb = {}
@@ -229,7 +238,7 @@ class CAServer:
 
         # get starting output from the model and set up output process variables
         self.output_pv_state = self.model.run(self.input_pv_state)
-        self.output_pv_state = format_model_output(self.output_pv_state)
+        self.output_pv_state = format_model_output(self.output_pv_state, self.array_pvs)
         self.pvdb.update(output_pvdb)
 
         # initialize channel access server
@@ -251,7 +260,7 @@ class CAServer:
         # Initialize output variables
         print("Initializing sim...")
         output_pv_state = self.model.run(self.input_pv_state)
-        output_pv_state = format_model_output(output_pv_state)
+        output_pv_state = format_model_output(output_pv_state, self.array_pvs)
         self.driver.set_output_pvs(output_pv_state)
         print("...finished initializing.")
 
@@ -269,7 +278,7 @@ class CAServer:
 
                     sim_pv_state = copy.deepcopy(self.input_pv_state)
                     model_output = self.model.run(self.input_pv_state)
-                    model_output = format_model_output(model_output)
+                    model_output = format_model_output(model_output, self.array_pvs)
                     self.driver.set_output_pvs(model_output)
 
         except KeyboardInterrupt:
