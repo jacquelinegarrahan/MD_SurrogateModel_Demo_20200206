@@ -183,7 +183,7 @@ class PVAServer:
             Dictionary that maps the output process variable string to type (str), \\
             prec (precision), value (float), units (str), range (List[float])
 
-        image_pvs: list
+        array_pvs: list
             List of array pvs that need to be served as ntndarray
 
         prefix: str
