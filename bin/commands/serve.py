@@ -26,6 +26,7 @@ def start_server(protocol: str, data_file: str, from_xarray: bool):
 
     MODEL_FILE = "online_model/files/CNN_051620_SurrogateModel.h5"
     STOCK_LASER_IMAGE = "online_model/files/example_input_image.npy"
+    ARRAY_PVS = ["x:y", "image"]
 
     MODEL_KWARGS = {
         "model_file": MODEL_FILE,

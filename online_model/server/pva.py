@@ -1,6 +1,6 @@
 import threading
 import numpy as np
-from typing import Dict
+from typing import Dict, List
 
 from p4p.nt import NTScalar, NTNDArray
 from p4p.server.thread import SharedPV
@@ -8,10 +8,9 @@ from p4p.server import Server
 from p4p.nt.ndarray import ntndarray as NTNDArrayData
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS
 
 
-def format_model_output(model_output):
+def format_model_output(model_output, image_pvs):
     """
     Reformat model for pva server compatibility.
 
@@ -146,6 +145,7 @@ class PVAServer:
         in_pvdb: Dict[str, dict],
         out_pvdb: Dict[str, dict],
         prefix: str,
+        array_pvs: List[str],
     ) -> None:
         """
         Initialize the global process variable list, populate the initial values for \\
@@ -168,6 +168,9 @@ class PVAServer:
         out_pvdb: dict
             Dictionary that maps the output process variable string to type (str), \\
             prec (precision), value (float), units (str), range (List[float])
+
+        image_pvs: list
+            List of array pvs that need to be served as ntndarray
 
         prefix: str
             Prefix to use when serving
@@ -199,7 +202,7 @@ class PVAServer:
         for in_pv in in_pvdb:
             pvname = f"{prefix}:{in_pv}"
 
-            if in_pv not in ARRAY_PVS:
+            if in_pv not in array_pvs:
                 pv = SharedPV(
                     handler=InputHandler(
                         prefix
@@ -221,10 +224,10 @@ class PVAServer:
         # updates to output pvs are handled from post calls within the input update
         for out_pv, value in starting_output.items():
             pvname = f"{prefix}:{out_pv}"
-            if out_pv not in ARRAY_PVS:
+            if out_pv not in array_pvs:
                 pv = SharedPV(nt=NTScalar(), initial=value)
 
-            elif out_pv in ARRAY_PVS:
+            elif out_pv in array_pvs:
                 pv = SharedPV(nt=NTNDArray(), initial=value)
 
             providers[pvname] = pv

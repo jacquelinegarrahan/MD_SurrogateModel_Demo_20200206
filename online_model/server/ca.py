@@ -7,7 +7,6 @@ from epics import caget
 from pcaspy import Driver, SimpleServer
 
 from online_model.model.surrogate_model import OnlineSurrogateModel
-from online_model import ARRAY_PVS
 
 
 def format_model_output(model_output):
