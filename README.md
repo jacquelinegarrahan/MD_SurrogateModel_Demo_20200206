@@ -25,19 +25,29 @@ In the first terminal, type (replacing `protocol` with `pva` for PVAccess and `c
 
 Using the pydantic variables:
 ```
-$ python bin/cli.py serve start-server pva online_model/files/pydantic_variables.pickle
+$ python bin/cli.py serve start-server {protocol} online_model/files/pydantic_variables.pickle
 ```
 Or using xarray:
 ```
-$ python bin/cli.py serve start-server pva online_model/files/xarray_dset.pickle --from-xarray
+$ python bin/cli.py serve start-server {protocol} online_model/files/xarray_dset.pickle --from-xarray
 ```
 
 
 In the other terminal:
 
 ```
-$ PROTOCOL={protocol} bokeh serve online_model/app/pages/dashboard.py
+$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f {data_file}
 ```
+
+If using xarray
+```
+$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f {data_file} --from-xarray
+```
+
+Pre-build files for the original demo are included at:
+```online_model/files/pydantic_variables.pickle``
+```online_model/files/xarray_dset.pickle```
+
 
 In an internet browser tab, navigate to:
 
@@ -96,50 +106,40 @@ In addition to the project environmment a .yml file has been included for a deve
 These can be set up by running the following command inside the `online-surrogate-model-dev` conda environment:
 `pre-commit install`
 
+## Variable setup
 
-## Code structure
+Required variables for server.
 
-```
-MD_SurrogateModel_Demo_20200206
-├── README.md
-├── bin
-│   ├── __init__.py
-│   ├── cli.py
-│   └── commands
-│       ├── __init__.py
-│       └── serve.py
-├── environment-dev.yml
-├── environment.yml
-└── online_model
-    ├── __init__.py
-    ├── app
-    │   ├── __init__.py
-    │   ├── controllers.py
-    │   ├── monitors.py
-    │   ├── pages
-    │   │   ├── __init__.py
-    │   │   ├── controls.py
-    │   │   ├── dashboard.py
-    │   │   ├── image_viewer.py
-    │   │   └── striptool.py
-    │   └── widgets
-    │       ├── __init__.py
-    │       ├── plots.py
-    │       ├── sliders.py
-    │       └── tables.py
-    ├── files
-    │   ├── CNN_051620_SurrogateModel.h5
-    │   └── example_input_image.npy
-    ├── model
-    │   ├── MySurrogateModel.py
-    │   ├── __init__.py
-    │   └── surrogate_model.py
-    ├── notebooks
-    │   ├── Dashboard.ipynb
-    │   └── Server.ipynb
-    ├── server
-    │   ├── __init__.py
-    │   ├── ca.py
-    │   └── pva.py
-    └── util.py
-```
+### Scalar
+
+#### Input
+- pv_type = "scalar"
+- value
+- precision
+- is_input = 1
+- range (need for sliders)
+
+#### Output
+- pv_type = "scalar"
+- precision
+- is_input = 0
+
+### Image
+
+#### Input
+- pv_type = "image"
+- value
+- precision
+- shape
+- color_mode
+- is_input = 1
+- units
+
+#### Output
+- pv_type = "image"
+- precision
+- shape
+- color_mode
+- is_input = 0
+- units
+- default
