@@ -20,6 +20,7 @@ from online_model.app import parse_args
 from online_model import ARRAY_PVS
 
 PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
+ARRAY_PVS = ["x:y"]
 
 # server prefix
 PREFIX = "smvm"
@@ -32,8 +33,16 @@ PLOT_PVDB = {
 # create controller
 controller = Controller(PROTOCOL)
 
+
+# Set up the striptool
+# exclude array
+striptool_to_render = {}
+for var, value in PLOT_PVDB.items():
+    if var not in ARRAY_PVS:
+        striptool_to_render[var] = value
+
 # Set up the controller for the plot
-striptool = Striptool(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
+striptool = Striptool(striptool_to_render, controller, PREFIX)
 striptool.build_plot()
 current_pv = striptool.current_pv
 

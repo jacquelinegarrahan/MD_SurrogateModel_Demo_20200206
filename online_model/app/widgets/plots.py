@@ -42,6 +42,9 @@ class ImagePlot:
         controller: online_model.app.widgets.controllers.Controller
             Controller object for getting pv values
 
+        prefix: str
+            Prefix used for server
+
         """
         self.pv_monitors = {}
 
@@ -135,9 +138,7 @@ class Striptool:
 
     """
 
-    def __init__(
-        self, sim_pvdb: dict, controller: Controller, array_pvs: List[str], prefix: str
-    ) -> None:
+    def __init__(self, sim_pvdb: dict, controller: Controller, prefix: str) -> None:
         """
         Initialize monitors, current process variable, and data source.
 
@@ -149,23 +150,16 @@ class Striptool:
         controller: online_model.app.widgets.controllers.Controller
             Controller object for getting pv values
 
-        array_pvs: list
-            List of pvs to be excluded due to image formatting etc.
-
-        Notes
-        -----
-        The array_pvs is kind of a hacky fix that should be fixed and accounted for
-        when stronger parameter type definitions are implemented.
+        prefix: str
+            Prefix used for server.
 
         """
         self.pv_monitors = {}
 
-        # only creating pvs for non-image pvs
         for opv in sim_pvdb:
-            if opv not in array_pvs:
-                self.pv_monitors[opv] = PVTimeSeries(
-                    f"{prefix}:{opv}", sim_pvdb[opv]["units"], controller
-                )
+            self.pv_monitors[opv] = PVTimeSeries(
+                f"{prefix}:{opv}", sim_pvdb[opv]["units"], controller
+            )
 
         self.current_pv = list(self.pv_monitors.keys())[0]
         ts, ys = self.pv_monitors[self.current_pv].poll()

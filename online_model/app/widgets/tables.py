@@ -7,9 +7,7 @@ from online_model.app.monitors import PVScalar
 
 
 class ValueTable:
-    def __init__(
-        self, sim_pvdb, controller: Controller, array_pvs: List[str], prefix: str
-    ) -> None:
+    def __init__(self, sim_pvdb, controller: Controller, prefix: str) -> None:
         """
         View for value table item. Maps process variable name to its value.
 
@@ -21,13 +19,8 @@ class ValueTable:
         controller: online_model.app.widgets.controllers.Controller
             Controller object for getting pv values
 
-        array_pvs: list
-            List of pvs to be excluded due to image formatting etc.
-
-        Notes
-        -----
-        The array_pvs is kind of a hacky fix that should be fixed and accounted for
-        when stronger parameter type definitions are implemented.
+        prefix: str
+            Prefix used for the server
 
         """
         # only creating pvs for non-image pvs
@@ -39,15 +32,14 @@ class ValueTable:
         self.unit_map = {}
 
         for pv in sim_pvdb:
-            if pv not in array_pvs:
-                self.pv_monitors[pv] = PVScalar(
-                    f"{prefix}:{pv}", sim_pvdb[pv]["units"], controller
-                )
-                v = self.pv_monitors[pv].poll()
+            self.pv_monitors[pv] = PVScalar(
+                f"{prefix}:{pv}", sim_pvdb[pv]["units"], controller
+            )
+            v = self.pv_monitors[pv].poll()
 
-                self.output_values.append(v)
-                self.names.append(pv)
-                self.unit_map[pv] = sim_pvdb[pv]["units"]
+            self.output_values.append(v)
+            self.names.append(pv)
+            self.unit_map[pv] = sim_pvdb[pv]["units"]
 
         self.create_table()
 

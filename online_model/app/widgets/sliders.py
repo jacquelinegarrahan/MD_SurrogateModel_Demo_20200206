@@ -42,9 +42,7 @@ def set_pv_from_slider(
     controller.put(pvname, new * scale)
 
 
-def build_slider(
-    title: str, pvname, scale, start, end, step, controller, server="bokeh"
-) -> Slider:
+def build_slider(title: str, pvname, scale, start, end, step, controller) -> Slider:
     """
     Utility function for building a slider.
 
@@ -105,6 +103,10 @@ def build_sliders(cmd_pvdb: dict, controller: Controller, prefix: str) -> List[S
     Parameters
     ----------
     cmd_pvdb: dict
+        Process variable db config for slider inputs
+
+    prefix: str
+        Prefix used for server
 
     Return
     ------

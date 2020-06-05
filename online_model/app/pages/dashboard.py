@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../../..")
 import epics
 
 # fix for bug that made vars unreachable...
-# still not sure what the origin was
+# need to find origin
 epics.ca.initialize_libca()
 
 from online_model.app.controllers import Controller
@@ -29,6 +29,8 @@ PROTOCOL, CMD_PVDB, SIM_PVDB = parse_args()
 # TEMPORARY FIX FOR SAME NAME INPUT/OUTPUT VARS
 REDUNDANT_INPUT_OUTPUT = ["xmin", "xmax", "ymin", "ymax"]
 EXCLUDE_SLIDERS = ["in_" + input_name for input_name in REDUNDANT_INPUT_OUTPUT]
+ARRAY_PVS = ["x:y"]
+
 
 # server prefix
 PREFIX = "smvm"
@@ -91,7 +93,14 @@ sliders = build_sliders(sliders_to_render, controller, PREFIX)
 slider_col = column(sliders, width=350)
 
 # Set up the striptool
-striptool = Striptool(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
+# exclude array
+striptool_to_render = {}
+for var, value in PLOT_PVDB.items():
+    if var not in ARRAY_PVS:
+        striptool_to_render[var] = value
+
+
+striptool = Striptool(striptool_to_render, controller, PREFIX)
 striptool.build_plot()
 
 # set up global pv
@@ -121,7 +130,13 @@ def striptool_update_callback():
 
 
 # add table
-value_table = ValueTable(PLOT_PVDB, controller, ARRAY_PVS, PREFIX)
+# exclude array
+value_table_to_render = {}
+for var, value in PLOT_PVDB.items():
+    if var not in ARRAY_PVS:
+        value_table_to_render[var] = value
+
+value_table = ValueTable(value_table_to_render, controller, PREFIX)
 
 # Set up table update callback
 def table_update_callback():
