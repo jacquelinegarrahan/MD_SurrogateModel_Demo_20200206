@@ -1,4 +1,4 @@
-name: online-surrogate-model-dev
+name: online-surrogate-model
 dependencies:
   - python=3.7
   - epics-base=7.0.3.1
