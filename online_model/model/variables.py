@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 from enum import Enum
 from typing import Any, List, Union, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # custom validator for ndarrays
 class NumpyNDArray(np.ndarray):
@@ -18,32 +18,16 @@ class NumpyNDArray(np.ndarray):
         return v
 
 
-# custom validator for xarray DataArrays
-class XarrayDataArray(xr.DataArray):
-    __slots__ = []  # xarrray requires explicit definition of slots on subclasses
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v: Any) -> xr.DataArray:
-        # validate data...
-        if not isinstance(v, xr.DataArray):
-            raise TypeError("Xarray DataArray required")
-        return v
-
-
 class IOEnum(str, Enum):
-    input = "input"
-    output = "output"
+    pv_input = "input"
+    pv_output = "output"
 
 
 class ProcessVariable(BaseModel):
     name: str
     io_type: IOEnum  # requires selection of input or output for creation
     # defaults for pvdb
-    type: str = "float"
+    value_type: str = Field("float", alias="type")
     precision: int = 8
 
     class Config:
@@ -53,14 +37,14 @@ class ProcessVariable(BaseModel):
 class ScalarProcessVariable(ProcessVariable):
     value: Optional[float]
     default: Optional[float]
-    range: Optional[Union[NumpyNDArray, XarrayDataArray]]
+    value_range: list = Field(alias="range")
     units: Optional[str]
 
 
 class NDProcessVariable(ProcessVariable):
     value: Optional[NumpyNDArray]
     default: Optional[NumpyNDArray]
-    range: Optional[Union[NumpyNDArray, XarrayDataArray]]
+    value_range: list = Field(alias="range")
     units: str
 
 
