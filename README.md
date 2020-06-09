@@ -36,12 +36,12 @@ $ python bin/cli.py serve start-server {protocol} online_model/files/xarray_dset
 In the other terminal:
 
 ```
-$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f {data_file}
+$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f online_model/files/pydantic_variables.pickle
 ```
 
 If using xarray
 ```
-$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f {data_file} --from-xarray
+$ bokeh serve online_model/app/pages/dashboard.py --args -p {protocol} -f online_model/files/xarray_dset.pickle --from-xarray
 ```
 
 Pre-build files for the original demo are included at:
