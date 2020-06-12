@@ -15,7 +15,7 @@ if not PROTOCOL:
 # pva prefix
 PREFIX = "smvm"
 
-MODEL_FILE = "online_model/files/CNN_051620_SurrogateModel.h5"
+MODEL_FILE = "online_model/files/CNN_060420_SurrogateModel.h5"
 STOCK_LASER_IMAGE = "online_model/files/example_input_image.npy"
 
 # pva prefix
