@@ -89,50 +89,5 @@ In addition to the project environmment a .yml file has been included for a deve
 These can be set up by running the following command inside the `online-surrogate-model-dev` conda environment:
 `pre-commit install`
 
-
-## Code structure
-
-```
-MD_SurrogateModel_Demo_20200206
-├── README.md
-├── bin
-│   ├── __init__.py
-│   ├── cli.py
-│   └── commands
-│       ├── __init__.py
-│       └── serve.py
-├── environment-dev.yml
-├── environment.yml
-└── online_model
-    ├── __init__.py
-    ├── app
-    │   ├── __init__.py
-    │   ├── controllers.py
-    │   ├── monitors.py
-    │   ├── pages
-    │   │   ├── __init__.py
-    │   │   ├── controls.py
-    │   │   ├── dashboard.py
-    │   │   ├── image_viewer.py
-    │   │   └── striptool.py
-    │   └── widgets
-    │       ├── __init__.py
-    │       ├── plots.py
-    │       ├── sliders.py
-    │       └── tables.py
-    ├── files
-    │   ├── CNN_051620_SurrogateModel.h5
-    │   └── example_input_image.npy
-    ├── model
-    │   ├── MySurrogateModel.py
-    │   ├── __init__.py
-    │   └── surrogate_model.py
-    ├── notebooks
-    │   ├── Dashboard.ipynb
-    │   └── Server.ipynb
-    ├── server
-    │   ├── __init__.py
-    │   ├── ca.py
-    │   └── pva.py
-    └── util.py
-```
+## Update model
+In order to update the demo to use a new model, add the file to `online_model/files` (the hdf5 has to have the same structure as existing models), and update `MODEL_FILE` in `online_model/__init__.py` to point to the model.
