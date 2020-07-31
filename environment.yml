@@ -1,0 +1,19 @@
+name: online-surrogate-model
+dependencies:
+  - python=3.7
+  - epics-base=7.0.3.1
+  - conda-forge::pcaspy=0.7.2
+  - scikit-learn=0.21.3
+  - conda-forge::pyepics
+  - conda-forge::p4p=3.4.2
+  - conda-forge::jupyterlab
+  - bokeh::jupyter_bokeh
+  - conda-forge::notebook
+  - anaconda::ipykernel
+  - h5py
+  - bokeh
+  - click
+  - pip
+  - pip:
+    - tensorflow==2.1.0
+    - keras==2.2.4
